@@ -1,0 +1,16 @@
+{
+  "name": "xaeo-app",
+  "version": "0.1.0",
+  "description": "Web app that shows a brand how visible it is in AI answer engines.",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server/index.js",
+    "dev": "node --watch src/server/index.js",
+    "test": "node --test \"tests/**/*.test.js\""
+  }
+}
