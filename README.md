@@ -88,25 +88,25 @@ The app runs with `ENGINE_MODE=mock` by default, so no API keys are needed. The 
 
 ## Scripts
 
-| Command       | What it does                                  |
-| ------------- | --------------------------------------------- |
-| `npm start`   | Start the server                              |
-| `npm run dev` | Start the server and restart on file changes  |
-| `npm test`    | Run all tests with the Node.js test runner    |
+| Command       | What it does                                 |
+| ------------- | -------------------------------------------- |
+| `npm start`   | Start the server                             |
+| `npm run dev` | Start the server and restart on file changes |
+| `npm test`    | Run all tests with the Node.js test runner   |
 
 ## Environment variables
 
 Copy `.env.example` to `.env`. The `.env` file is ignored by git.
 
-| Variable             | Default             | Description                                              |
-| -------------------- | ------------------- | -------------------------------------------------------- |
-| `PORT`               | `3000`              | Port the server listens on                               |
-| `NODE_ENV`           | `development`       | `development`, `test` or `production`                    |
-| `DATABASE_PATH`      | `./data/xaeo.db`    | Location of the database file                            |
-| `ENGINE_MODE`        | `mock`              | `mock` uses the built-in engine; `live` uses real engines |
-| `OPENAI_API_KEY`     | empty               | Needed only for the OpenAI engine                        |
-| `PERPLEXITY_API_KEY` | empty               | Needed only for the Perplexity engine                    |
-| `SESSION_SECRET`     | empty               | Long random string used to sign session cookies          |
+| Variable             | Default          | Description                                               |
+| -------------------- | ---------------- | --------------------------------------------------------- |
+| `PORT`               | `3000`           | Port the server listens on                                |
+| `NODE_ENV`           | `development`    | `development`, `test` or `production`                     |
+| `DATABASE_PATH`      | `./data/xaeo.db` | Location of the database file                             |
+| `ENGINE_MODE`        | `mock`           | `mock` uses the built-in engine; `live` uses real engines |
+| `OPENAI_API_KEY`     | empty            | Needed only for the OpenAI engine                         |
+| `PERPLEXITY_API_KEY` | empty            | Needed only for the Perplexity engine                     |
+| `SESSION_SECRET`     | empty            | Long random string used to sign session cookies           |
 
 ## Testing
 

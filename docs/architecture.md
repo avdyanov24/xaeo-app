@@ -10,15 +10,15 @@ Xaeo is a Node.js 22 web app (ES modules, no framework, no build step) that serv
 
 Dependencies point one way: `routes` -> `services` -> `engines` and `db`.
 
-| Layer       | Folder                | Responsibility                                                   | Must not                        |
-| ----------- | --------------------- | ---------------------------------------------------------------- | ------------------------------- |
-| Routes      | `src/server/routes`   | HTTP only: parse and validate input, call a service, respond     | contain business logic or SQL   |
-| Services    | `src/server/services` | Business logic: scans, scoring, detection, recommendations       | touch HTTP requests or responses |
-| Engines     | `src/server/engines`  | Adapters for AI engines, all implementing one shared interface   | be called from routes directly  |
-| Database    | `src/server/db`       | Schema and repositories                                          | hold business rules             |
-| Helpers     | `src/server/lib`      | Small shared utilities                                           | depend on other layers          |
-| Frontend    | `src/web`             | Pages, components, styles and scripts                            |                                 |
-| API gateway | `src/web/js/api.js`   | The only frontend file that talks to the backend                 |                                 |
+| Layer       | Folder                | Responsibility                                                 | Must not                         |
+| ----------- | --------------------- | -------------------------------------------------------------- | -------------------------------- |
+| Routes      | `src/server/routes`   | HTTP only: parse and validate input, call a service, respond   | contain business logic or SQL    |
+| Services    | `src/server/services` | Business logic: scans, scoring, detection, recommendations     | touch HTTP requests or responses |
+| Engines     | `src/server/engines`  | Adapters for AI engines, all implementing one shared interface | be called from routes directly   |
+| Database    | `src/server/db`       | Schema and repositories                                        | hold business rules              |
+| Helpers     | `src/server/lib`      | Small shared utilities                                         | depend on other layers           |
+| Frontend    | `src/web`             | Pages, components, styles and scripts                          |                                  |
+| API gateway | `src/web/js/api.js`   | The only frontend file that talks to the backend               |                                  |
 
 ## Engine interface
 
