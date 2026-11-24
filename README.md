@@ -1,112 +1,117 @@
-# Xaeo
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/xaeo-wordmark-white.png">
+    <img src="docs/media/xaeo-wordmark.png" alt="Xaeo" width="260">
+  </picture>
+</p>
 
-Xaeo is a web app that shows a brand how visible it is in AI answer engines such as ChatGPT and Perplexity. When people ask an AI assistant "what is the best tool for X?", some brands get mentioned and linked, and others do not. Xaeo measures that and tells you what to do about it.
+<p align="center">
+  <strong>See how your clients show up in AI answers, and fix it.</strong>
+</p>
 
-> **Status: in development.** Everything below describes the planned scope. The repository currently contains the project scaffold and documentation only.
+<p align="center">
+  <a href="https://github.com/avdyanov24/xaeo-app/actions/workflows/ci.yml"><img src="https://github.com/avdyanov24/xaeo-app/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status"></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D22.13-339933?logo=node.js&logoColor=white" alt="Node.js 22.13 or newer">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="License: GPL-3.0"></a>
+  <a href="https://prettier.io"><img src="https://img.shields.io/badge/code_style-prettier-ff69b4?logo=prettier&logoColor=white" alt="Code style: Prettier"></a>
+  <a href="https://www.conventionalcommits.org"><img src="https://img.shields.io/badge/commits-conventional-fe5196?logo=conventionalcommits&logoColor=white" alt="Conventional Commits"></a>
+</p>
 
-## Features (planned)
+Xaeo is a web app for SEO and marketing agencies. When a potential customer asks ChatGPT or Claude "who is the best plumber in Leeds?", some businesses get recommended and others are never mentioned. Xaeo asks those buyer questions for each of an agency's clients, records who gets recommended and which pages are cited, and turns the gaps into prioritised fixes. Xo, the built-in assistant, drafts each fix for a person on the agency team to review and approve, and the results go into white-label reports the agency sends to its client.
 
-- **Accounts and roles:** sign up and log in as a `user`, or as an `admin` with access to all accounts and system settings.
-- **Brands:** add a brand with its name and domain.
-- **Scans:** a scan sends a set of buyer-style questions (for example "what is the best CRM for a small agency?") to one or more AI engines.
-- **Detection:** for every answer, check whether the brand is mentioned and whether its domain is cited as a source.
-- **Visibility score:** a single score per scan, with a per-engine and per-question breakdown.
-- **Scan history:** keep past scans and compare how the score changes over time.
-- **Recommendations:** practical, prioritised suggestions for improving visibility.
-- **Engines:** OpenAI and Perplexity, plus a built-in mock engine so the whole app runs without any API keys.
+<!-- Screenshots and a short screen recording go here once the web app runs end to end. -->
+
+## Contents
+
+- [Project status](#project-status)
+- [Architecture](#architecture)
+- [Getting started](#getting-started)
+- [Scripts](#scripts)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [Project structure](#project-structure)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Authors](#authors)
+- [License](#license)
+
+## Project status
+
+Xaeo is under active development. This list tracks what is in `main`:
+
+- [x] HTTP server with routing, input validation, a consistent JSON error format and a health check
+- [x] CI: lint, formatting, tests on Node.js 22 and 24, Docker image build and smoke test
+- [ ] Database layer and accounts (sign up, log in, sessions, user and admin roles)
+- [ ] Agency web app: clients, buyer questions, scans and answers
+- [ ] Fixes, approvals and the Xo assistant
+- [ ] White-label client reports
+- [ ] Account, team and admin pages
 
 ## Architecture
 
-```
-  Browser (vanilla HTML/CSS/JS)
-  src/web/js/api.js            <- the only frontend file that talks to the backend
-        |
-        |  HTTP / JSON
-        v
-  routes/       HTTP only: parse input, validate, call a service, send the response
-        |
-        v
-  services/     business logic: scans, scoring, detection, recommendations
-        |                 |
-        v                 v
-  engines/              db/
-  one shared interface  schema + repositories (SQLite)
-  - mock
-  - openai
-  - perplexity
+```mermaid
+flowchart LR
+  browser["Browser<br/>HTML, CSS, JavaScript"] -->|JSON over HTTP| router
+  subgraph server["Node.js server"]
+    router["http/<br/>router, body parsing"] --> routes["routes/<br/>validate input"]
+    routes --> services["services/<br/>business logic"]
+    services --> repositories["repositories/<br/>SQL"]
+  end
+  repositories --> db[("SQLite")]
 ```
 
-Layer rule: routes handle HTTP only, services hold business logic and never touch HTTP, engines all implement one interface, `db` holds the schema and repositories, and `src/web/js/api.js` is the only frontend file that talks to the backend. More detail in [docs/architecture.md](docs/architecture.md).
+One request flows one way: the router matches the path, a route validates input and calls a service, the service applies the business rules, and only repositories run SQL. Errors become one JSON shape, `{ "error": { "code", "message" } }`, at the edge. Details in [docs/architecture.md](docs/architecture.md); the reasons for these choices are in [ADR 0001](docs/adr/0001-plain-node-layered-architecture.md).
 
-## Folder structure
-
-```
-.
-├── .github/workflows/ci.yml   CI: runs the tests on push and pull request
-├── docs/                      architecture notes and user guide
-├── scripts/                   helper scripts (database setup, seeding)
-├── src/
-│   ├── server/
-│   │   ├── routes/            HTTP handlers
-│   │   ├── services/          business logic
-│   │   ├── engines/           AI engine adapters (mock, OpenAI, Perplexity)
-│   │   ├── db/                schema and repositories
-│   │   └── lib/               small shared helpers
-│   └── web/
-│       ├── pages/             HTML pages
-│       ├── components/        reusable UI pieces
-│       ├── styles/            CSS
-│       └── js/                frontend scripts (api.js is the backend gateway)
-├── tests/
-│   ├── unit/                  tests for services, engines and helpers
-│   └── integration/           tests that exercise the HTTP API
-├── .env.example               environment variable template
-├── CONTRIBUTING.md
-├── LICENSE
-└── package.json
-```
-
-## Tech stack
-
-- Node.js 22, ES modules, no framework and no build step
-- Vanilla HTML, CSS and JavaScript on the frontend
-- SQLite for storage
-- `node --test` for tests
+**Tech stack:** Node.js (ES modules, no framework, no build step), `node:sqlite`, `node:test`, ESLint, Prettier, Docker, GitHub Actions.
 
 ## Getting started
 
-Requirements: Node.js 22 or newer (`nvm use` reads the version from `.nvmrc`).
+Requirements: Node.js 22.13 or newer (`nvm use` picks the version in `.nvmrc`).
 
 ```sh
 git clone https://github.com/avdyanov24/xaeo-app.git
 cd xaeo-app
-cp .env.example .env     # then set SESSION_SECRET
-npm start
+npm ci
+cp .env.example .env
+npm run dev
 ```
 
-The app runs with `ENGINE_MODE=mock` by default, so no API keys are needed. The server entry point (`src/server/index.js`) is not written yet.
+The server listens on <http://127.0.0.1:3000>. Check it with:
+
+```sh
+curl http://127.0.0.1:3000/api/health
+```
+
+### With Docker
+
+```sh
+docker compose up --build
+```
+
+The container runs as a non-root user and reports its health through `/api/health`.
 
 ## Scripts
 
-| Command       | What it does                                 |
-| ------------- | -------------------------------------------- |
-| `npm start`   | Start the server                             |
-| `npm run dev` | Start the server and restart on file changes |
-| `npm test`    | Run all tests with the Node.js test runner   |
+| Command                 | What it does                                        |
+| ----------------------- | --------------------------------------------------- |
+| `npm start`             | Start the server (reads `.env` when present)        |
+| `npm run dev`           | Start the server and restart it when files change   |
+| `npm test`              | Run unit and integration tests with `node --test`   |
+| `npm run test:coverage` | Run the tests with a coverage report                |
+| `npm run lint`          | Lint with ESLint (`lint:fix` applies safe fixes)    |
+| `npm run format`        | Format with Prettier (`format:check` only checks)   |
+| `npm run check`         | Lint, format check and tests: the same checks as CI |
 
-## Environment variables
+## Configuration
 
-Copy `.env.example` to `.env`. The `.env` file is ignored by git.
+Configuration comes from environment variables, validated at start-up; the server refuses to start and lists every invalid value. Copy `.env.example` to `.env` for local development.
 
-| Variable             | Default          | Description                                               |
-| -------------------- | ---------------- | --------------------------------------------------------- |
-| `PORT`               | `3000`           | Port the server listens on                                |
-| `NODE_ENV`           | `development`    | `development`, `test` or `production`                     |
-| `DATABASE_PATH`      | `./data/xaeo.db` | Location of the database file                             |
-| `ENGINE_MODE`        | `mock`           | `mock` uses the built-in engine; `live` uses real engines |
-| `OPENAI_API_KEY`     | empty            | Needed only for the OpenAI engine                         |
-| `PERPLEXITY_API_KEY` | empty            | Needed only for the Perplexity engine                     |
-| `SESSION_SECRET`     | empty            | Long random string used to sign session cookies           |
+| Variable    | Default       | Description                                       |
+| ----------- | ------------- | ------------------------------------------------- |
+| `NODE_ENV`  | `development` | `development`, `test` or `production`             |
+| `HOST`      | `127.0.0.1`   | Interface to bind (`0.0.0.0` in the Docker image) |
+| `PORT`      | `3000`        | Port to listen on                                 |
+| `LOG_LEVEL` | `info`        | `debug`, `info`, `warn`, `error` or `silent`      |
 
 ## Testing
 
@@ -114,21 +119,51 @@ Copy `.env.example` to `.env`. The `.env` file is ignored by git.
 npm test
 ```
 
-Tests use the built-in `node --test` runner and live in `tests/unit` and `tests/integration`. Test files are named `*.test.js`. Tests never call real AI engines; they use the mock engine.
+Tests use the built-in Node.js test runner. Unit tests in `tests/unit` cover single modules; integration tests in `tests/integration` start the real HTTP server on a random port and call it. CI runs the suite on Node.js 22 and 24 for every pull request.
 
-## Test accounts
+## Project structure
 
-_To be added once the seed script exists: one `user` account and one `admin` account with their credentials._
+```
+.
+├── .github/              CI workflow, Dependabot, issue and pull request templates
+├── docs/
+│   ├── adr/              architecture decision records
+│   ├── api.md            HTTP API reference
+│   └── architecture.md   how the server is organised
+├── src/
+│   └── server/
+│       ├── http/         router, JSON body parsing, response helpers
+│       ├── routes/       HTTP handlers, one module per area
+│       ├── services/     business logic
+│       ├── repositories/ SQL access
+│       ├── lib/          errors, logger, validation
+│       ├── app.js        builds the request handler
+│       ├── config.js     environment configuration
+│       └── index.js      process entry point
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── helpers/
+├── Dockerfile
+└── compose.yaml
+```
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [HTTP API reference](docs/api.md)
+- [Architecture decision records](docs/adr/README.md)
+- [Changelog](CHANGELOG.md)
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the branch, commit and review workflow. Everyone taking part agrees to the [code of conduct](CODE_OF_CONDUCT.md). Report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 ## Authors
 
-The Xaeo team:
-
-- TODO: name
-- TODO: name
+- **Aleksandar Dyanov**, co-founder and CEO ([@avdyanov24](https://github.com/avdyanov24))
+- **Velin Markov**, co-founder and CTO ([@VVMarkov24](https://github.com/VVMarkov24))
 
 ## License
 
-Copyright (C) 2026 The Xaeo team.
-
-Released under the GNU General Public License v3.0 only. See [LICENSE](LICENSE).
+Copyright (C) 2026 The Xaeo team. Released under the GNU General Public License v3.0 only; see [LICENSE](LICENSE).
