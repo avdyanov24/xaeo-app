@@ -5,9 +5,11 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Install production dependencies first so this layer is cached between code changes.
+# The npm cache stays in this stage; only node_modules is copied into the runtime image.
+# mkdir keeps the copy valid while the app has no runtime dependencies.
 FROM base AS deps
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && mkdir -p node_modules
 
 FROM base AS runtime
 ENV HOST=0.0.0.0 \
