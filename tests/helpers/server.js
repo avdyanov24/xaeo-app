@@ -1,19 +1,23 @@
 import { request as httpRequest, createServer } from 'node:http';
 import { createApp } from '../../src/server/app.js';
 import { loadConfig } from '../../src/server/config.js';
+import { openDatabase } from '../../src/server/db/database.js';
 import { createLogger } from '../../src/server/lib/logger.js';
 
 /**
- * Starts the app on a random port and stops it when the test ends.
+ * Starts the app on a random port with a fresh in-memory database,
+ * and stops both when the test ends.
  * @param {import('node:test').TestContext} t
  */
 export async function startTestServer(t, env = {}) {
   const config = loadConfig({ NODE_ENV: 'test', PORT: '0', ...env });
-  const server = createServer(createApp({ config, logger: createLogger({ level: 'silent' }) }));
+  const db = openDatabase(config.databasePath);
+  const logger = createLogger({ level: 'silent' });
+  const server = createServer(createApp({ config, logger, db }));
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise((resolve) => server.close(resolve)));
+  t.after(() => new Promise((resolve) => server.close(resolve)).then(() => db.close()));
   const { port } = server.address();
-  return { request: (method, path, options) => send(port, method, path, options) };
+  return { db, request: (method, path, options) => send(port, method, path, options) };
 }
 
 /**

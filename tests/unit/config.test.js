@@ -30,4 +30,22 @@ describe('loadConfig', () => {
         /LOG_LEVEL/.test(error.message),
     );
   });
+
+  it('picks a database and session settings for each environment', () => {
+    const dev = loadConfig({});
+    assert.equal(dev.databasePath, 'data/xaeo.db');
+    assert.equal(dev.sessionTtlMs, 14 * 24 * 60 * 60 * 1000);
+    assert.equal(dev.secureCookies, false);
+    assert.equal(loadConfig({ NODE_ENV: 'test' }).databasePath, ':memory:');
+    assert.equal(loadConfig({ NODE_ENV: 'production' }).secureCookies, true);
+    assert.equal(
+      loadConfig({ DATABASE_PATH: '/var/lib/xaeo.db' }).databasePath,
+      '/var/lib/xaeo.db',
+    );
+  });
+
+  it('rejects an out-of-range SESSION_TTL_DAYS', () => {
+    assert.throws(() => loadConfig({ SESSION_TTL_DAYS: '0' }), /SESSION_TTL_DAYS/);
+    assert.throws(() => loadConfig({ SESSION_TTL_DAYS: '1.5' }), /SESSION_TTL_DAYS/);
+  });
 });

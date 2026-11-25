@@ -1,11 +1,13 @@
 import { createServer } from 'node:http';
 import { createApp } from './app.js';
 import { loadConfig } from './config.js';
+import { openDatabase } from './db/database.js';
 import { createLogger } from './lib/logger.js';
 
 const config = loadConfig();
 const logger = createLogger({ level: config.logLevel });
-const server = createServer(createApp({ config, logger }));
+const db = openDatabase(config.databasePath);
+const server = createServer(createApp({ config, logger, db }));
 
 server.listen(config.port, config.host, () => {
   const { port } = server.address();
@@ -14,7 +16,10 @@ server.listen(config.port, config.host, () => {
 
 function shutdown(signal) {
   logger.info('server_stopping', { signal });
-  server.close(() => process.exit(0));
+  server.close(() => {
+    db.close();
+    process.exit(0);
+  });
   server.closeIdleConnections();
   setTimeout(() => process.exit(1), 10_000).unref();
 }

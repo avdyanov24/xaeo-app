@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createRouter } from './http/router.js';
+import { createSessionHttp } from './http/session.js';
 import { sendError, sendJson, setSecurityHeaders } from './http/respond.js';
 import { HttpError } from './lib/errors.js';
 import { registerRoutes } from './routes/index.js';
+import { createAuthService } from './services/auth-service.js';
 
 const { version } = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
@@ -12,11 +14,13 @@ const { version } = JSON.parse(
 /**
  * Builds the request handler. Route handlers receive a context object and either
  * return a value (sent as 200 JSON), return `{ status, body }`, or write to `ctx.res` themselves.
- * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger> }} deps
+ * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger>, db: import('node:sqlite').DatabaseSync }} deps
  */
-export function createApp({ config, logger }) {
+export function createApp({ config, logger, db }) {
+  const auth = createAuthService({ db, sessionTtlMs: config.sessionTtlMs });
+  const sessionHttp = createSessionHttp({ auth, config });
   const router = createRouter();
-  registerRoutes(router, { config, logger, version, startedAt: Date.now() });
+  registerRoutes(router, { config, logger, version, startedAt: Date.now(), auth, sessionHttp });
 
   return async function handle(req, res) {
     const started = process.hrtime.bigint();
