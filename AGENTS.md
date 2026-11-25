@@ -36,20 +36,20 @@ What this means for changes: keep the UI (`src/web`) and the business logic (`sr
 
 The app is built in ten milestones, one per day, from 24 November to 3 December 2026, ahead of the 4 December defence. Each milestone is one branch and one pull request, and owners alternate: A is Alexander, V is Velin. A daily run builds the next due milestone, so a milestone's branch name matters: runs detect finished milestones by merged pull requests from these exact branches.
 
-| Milestone | Date   | Owner | Branch                         | Scope                                                                                                                    |
-| --------- | ------ | ----- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| M0        | 24 Nov | A     | `chore/repo-foundation`        | Tooling, server skeleton, CI, Docker, docs, ADR 0001, community files (merged)                                           |
-| M1        | 25 Nov | V     | `feat/database-and-auth`       | SQLite with migrations, identity tables, scrypt passwords, cookie sessions, signup, login, logout, session, route guards |
-| M2        | 26 Nov | A     | `feat/web-app-shell`           | Static file server, page routes, the app shell and its scripts and assets, `GET /api/app/me`                             |
-| M3        | 27 Nov | V     | `feat/auth-pages-and-styles`   | Login and signup pages, seed data and `npm run db:seed`, test accounts                                                   |
-| M4        | 28 Nov | A     | `feat/clients-and-scans`       | Clients, questions, scans, answers, engines, an in-process sample engine, the Northside Plumbing story                   |
-| M5        | 29 Nov | V     | `feat/xo-assistant`            | Xo assistant: streamed scripted replies, conversations, approvals, artifacts                                             |
-| M6        | 30 Nov | V     | `feat/fixes-and-workspace`     | Fixes with status and verify, CSV export, brand and timezone settings, workspace export, client lifecycle                |
-| M7        | 1 Dec  | V     | `feat/reports-and-account`     | White-label reports, account security, team and invitations with role checks                                             |
-| M8        | 2 Dec  | A     | `feat/admin-and-screenshots`   | Admin area, screenshot script, README gallery, user guide                                                                |
-| M9        | 3 Dec  | A     | `docs/walkthrough-and-release` | Walkthrough GIF and MP4, final README pass, version 1.0.0, tag and release                                               |
+| Milestone | Date   | Owner | Branch                         | Scope                                                                                                                          |
+| --------- | ------ | ----- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| M0        | 24 Nov | A     | `chore/repo-foundation`        | Tooling, server skeleton, CI, Docker, docs, ADR 0001, community files (merged)                                                 |
+| M1        | 25 Nov | V     | `feat/database-and-auth`       | SQLite with migrations, identity tables, scrypt passwords, cookie sessions, signup, login, logout, session, route guards       |
+| M2        | 25 Nov | A     | `feat/web-app-shell`           | Static file server, page routes, the app shell and its scripts and assets (session check and `GET /api/app/me` arrive with M3) |
+| M3        | 27 Nov | V     | `feat/auth-pages-and-styles`   | Login and signup pages, seed data and `npm run db:seed`, test accounts                                                         |
+| M4        | 28 Nov | A     | `feat/clients-and-scans`       | Clients, questions, scans, answers, engines, an in-process sample engine, the Northside Plumbing story                         |
+| M5        | 29 Nov | V     | `feat/xo-assistant`            | Xo assistant: streamed scripted replies, conversations, approvals, artifacts                                                   |
+| M6        | 30 Nov | V     | `feat/fixes-and-workspace`     | Fixes with status and verify, CSV export, brand and timezone settings, workspace export, client lifecycle                      |
+| M7        | 1 Dec  | V     | `feat/reports-and-account`     | White-label reports, account security, team and invitations with role checks                                                   |
+| M8        | 2 Dec  | A     | `feat/admin-and-screenshots`   | Admin area, screenshot script, README gallery, user guide                                                                      |
+| M9        | 3 Dec  | A     | `docs/walkthrough-and-release` | Walkthrough GIF and MP4, final README pass, version 1.0.0, tag and release                                                     |
 
-Dependencies: M1 needs M0, M2 needs M1, M3 needs M2, M4 needs M3, M5 needs M4, M6 needs M4, M7 needs M6, M8 needs M7, M9 needs M8. Each milestone has a "done" check (for example, logging in as the seeded user lands on a styled `/app`, or `npm run check` is green); a milestone is finished only when that check passes by hand, CI is green and the pull request is merged.
+Dependencies: M1 needs M0, M2 needs M0, M3 needs M1 and M2, M4 needs M3, M5 needs M4, M6 needs M4, M7 needs M6, M8 needs M7, M9 needs M8. Each milestone has a "done" check (for example, logging in as the seeded user lands on a styled `/app`, or `npm run check` is green); a milestone is finished only when that check passes by hand, CI is green and the pull request is merged.
 
 ### Workflow for every change
 
@@ -89,9 +89,9 @@ src/
     index.js        process entry: reads config, starts the server
     app.js          builds the request handler
     config.js       environment configuration
-    http/           router, body parsing, response helpers
+    http/           router, body parsing, response helpers, static files
     lib/            errors, logger, input validation
-    routes/         HTTP handlers (health today)
+    routes/         HTTP handlers (health and pages today)
     services/       business logic
     repositories/   SQL only
   web/              the browser UI, served as static files

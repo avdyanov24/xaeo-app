@@ -41,6 +41,7 @@ Xaeo is under active development. This list tracks what is in `main`:
 
 - [x] HTTP server with routing, input validation, a consistent JSON error format and a health check
 - [x] CI: lint, formatting, tests on Node.js 22 and 24, Docker image build and smoke test
+- [x] Static file server and the agency web app shell (pages, scripts, design tokens, fonts)
 - [ ] Database layer and accounts (sign up, log in, sessions, user and admin roles)
 - [ ] Agency web app: clients, buyer questions, scans and answers
 - [ ] Fixes, approvals and the Xo assistant
@@ -81,6 +82,8 @@ The server listens on <http://127.0.0.1:3000>. Check it with:
 ```sh
 curl http://127.0.0.1:3000/api/health
 ```
+
+The web app is at <http://127.0.0.1:3000/app>.
 
 ### With Docker
 
@@ -131,8 +134,9 @@ Tests use the built-in Node.js test runner. Unit tests in `tests/unit` cover sin
 │   ├── api.md            HTTP API reference
 │   └── architecture.md   how the server is organised
 ├── src/
+│   ├── web/              the browser UI: app.html, ui/js, design tokens, fonts, assets
 │   └── server/
-│       ├── http/         router, JSON body parsing, response helpers
+│       ├── http/         router, JSON body parsing, response helpers, static files
 │       ├── routes/       HTTP handlers, one module per area
 │       ├── services/     business logic
 │       ├── repositories/ SQL access
