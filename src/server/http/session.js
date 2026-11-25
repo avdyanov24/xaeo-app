@@ -33,15 +33,15 @@ export function createSessionHttp({ auth, config }) {
   const currentSession = (req) => auth.getSession(readToken(req));
 
   /** Wraps a handler so it only runs for a signed-in user; `ctx.session` is set for it. */
-  const authenticated = (handler) => (ctx) => {
+  const requireUser = (handler) => (ctx) => {
     const session = currentSession(ctx.req);
     if (!session) throw unauthorized();
     return handler({ ...ctx, session });
   };
 
-  /** Like `authenticated`, and the user must also have the admin role. */
-  const adminOnly = (handler) =>
-    authenticated((ctx) => {
+  /** Like `requireUser`, and the user must also have the admin role. */
+  const requireAdmin = (handler) =>
+    requireUser((ctx) => {
       if (ctx.session.user.role !== 'admin') throw forbidden();
       return handler(ctx);
     });
@@ -51,7 +51,7 @@ export function createSessionHttp({ auth, config }) {
     setSessionCookie,
     clearSessionCookie,
     currentSession,
-    authenticated,
-    adminOnly,
+    requireUser,
+    requireAdmin,
   };
 }

@@ -13,19 +13,19 @@ const ctxFor = (token) => ({
 });
 
 describe('route guards', () => {
-  it('authenticated passes the session to the handler', () => {
-    const handler = guards.authenticated((ctx) => ctx.session.user.id);
+  it('requireUser passes the session to the handler', () => {
+    const handler = guards.requireUser((ctx) => ctx.session.user.id);
     assert.equal(handler(ctxFor('member')), 1);
   });
 
-  it('authenticated rejects a missing or unknown session with 401', () => {
-    const handler = guards.authenticated(() => 'reached');
+  it('requireUser rejects a missing or unknown session with 401', () => {
+    const handler = guards.requireUser(() => 'reached');
     assert.throws(() => handler(ctxFor(undefined)), { status: 401 });
     assert.throws(() => handler(ctxFor('stale')), { status: 401 });
   });
 
-  it('adminOnly rejects signed-in non-admins with 403', () => {
-    const handler = guards.adminOnly(() => 'reached');
+  it('requireAdmin rejects signed-in non-admins with 403', () => {
+    const handler = guards.requireAdmin(() => 'reached');
     assert.throws(() => handler(ctxFor('member')), { status: 403 });
     assert.equal(handler(ctxFor('admin')), 'reached');
     assert.throws(() => handler(ctxFor(undefined)), { status: 401 });

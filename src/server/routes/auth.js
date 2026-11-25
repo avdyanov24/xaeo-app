@@ -1,5 +1,5 @@
 import { readJson } from '../http/body.js';
-import { unauthorized, validationFailed } from '../lib/errors.js';
+import { HttpError, tooManyRequests, unauthorized, validationFailed } from '../lib/errors.js';
 import { validate } from '../lib/validate.js';
 
 const EMAIL = { type: 'email', required: true, max: 254 };
@@ -18,8 +18,8 @@ const LOGIN = {
 };
 
 /** Sign-up, sign-in, sign-out and the current session. */
-export function registerAuthRoutes(router, { auth, sessionHttp }) {
-  router.post('/api/auth/signup', async (ctx) => {
+export function registerAuthRoutes(router, { auth, sessionHttp, loginLimiter }) {
+  router.post('/api/signup', async (ctx) => {
     const input = validate(SIGNUP, await readJson(ctx.req));
     checkNewPassword(input.password);
     const result = await auth.signup(input);
@@ -27,24 +27,37 @@ export function registerAuthRoutes(router, { auth, sessionHttp }) {
     return { status: 201, body: sessionBody(result.session) };
   });
 
-  router.post('/api/auth/login', async (ctx) => {
+  router.post('/api/login', async (ctx) => {
     const input = validate(LOGIN, await readJson(ctx.req));
-    if (typeof input.password !== 'string') throw unauthorized('Email or password is incorrect.');
+    // Failed attempts are counted per client address and email, so guessing one
+    // account's password is slowed without locking that account for everyone else.
+    const limitKey = `${ctx.req.socket.remoteAddress}|${input.email.toLowerCase()}`;
+    const retryAfter = loginLimiter.retryAfterSeconds(limitKey);
+    if (retryAfter > 0) throw tooManyRequests(retryAfter);
+
+    let result;
+    try {
+      if (typeof input.password !== 'string') throw unauthorized('Email or password is incorrect.');
+      result = await auth.login(input);
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 401) loginLimiter.recordFailure(limitKey);
+      throw error;
+    }
+    loginLimiter.reset(limitKey);
     // Signing in again replaces any session this browser already had.
     auth.logout(sessionHttp.readToken(ctx.req));
-    const result = await auth.login(input);
     sessionHttp.setSessionCookie(ctx.res, result);
     return sessionBody(result.session);
   });
 
-  router.post('/api/auth/logout', (ctx) => {
+  router.post('/api/logout', (ctx) => {
     auth.logout(sessionHttp.readToken(ctx.req));
     sessionHttp.clearSessionCookie(ctx.res);
   });
 
   router.get(
-    '/api/auth/session',
-    sessionHttp.authenticated((ctx) => sessionBody(ctx.session)),
+    '/api/session',
+    sessionHttp.requireUser((ctx) => sessionBody(ctx.session)),
   );
 }
 

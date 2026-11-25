@@ -6,6 +6,7 @@ import { createSessionHttp } from './http/session.js';
 import { createStaticFiles } from './http/static.js';
 import { sendError, sendJson, setSecurityHeaders } from './http/respond.js';
 import { HttpError, notFound } from './lib/errors.js';
+import { createFailureLimiter } from './lib/rate-limit.js';
 import { registerRoutes } from './routes/index.js';
 import { createAuthService } from './services/auth-service.js';
 
@@ -24,6 +25,8 @@ const DEFAULT_WEB_ROOT = fileURLToPath(new URL('../web', import.meta.url));
 export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
   const auth = createAuthService({ db, sessionTtlMs: config.sessionTtlMs });
   const sessionHttp = createSessionHttp({ auth, config });
+  // Five wrong passwords per address and email, then a 15-minute wait.
+  const loginLimiter = createFailureLimiter({ limit: 5, windowMs: 15 * 60 * 1000 });
   const router = createRouter();
   const staticFiles = createStaticFiles({ root: webRoot });
   registerRoutes(router, {
@@ -33,6 +36,7 @@ export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
     startedAt: Date.now(),
     auth,
     sessionHttp,
+    loginLimiter,
     staticFiles,
   });
 

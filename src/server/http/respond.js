@@ -23,7 +23,10 @@ export function sendJson(res, status, body, headers = {}) {
 
 /** Sends the standard error envelope: `{ error: { code, message, ...details } }`. */
 export function sendError(res, status, code, message, details) {
-  const headers = status === 405 && details?.allowed ? { Allow: details.allowed.join(', ') } : {};
+  const headers = {};
+  if (status === 405 && details?.allowed) headers.Allow = details.allowed.join(', ');
+  if (status === 429 && details?.retryAfterSeconds)
+    headers['Retry-After'] = String(details.retryAfterSeconds);
   sendJson(res, status, { error: { code, message, ...details } }, headers);
 }
 
