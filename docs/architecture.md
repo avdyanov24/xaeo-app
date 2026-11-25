@@ -32,6 +32,31 @@ Dependencies point one way: `routes` -> `services` -> `repositories`. `lib` is s
 
 New route modules are registered in `src/server/routes/index.js`.
 
+## Database
+
+SQLite through the built-in `node:sqlite` driver, one file per deployment (`DATABASE_PATH`). `src/server/db/database.js` opens it with foreign keys on and WAL journaling, and offers `transaction(db, work)`.
+
+Schema changes are plain SQL files in `src/server/db/migrations`, named `NNN_name.sql`. On every start `src/server/db/migrate.js` applies the ones not yet listed in `schema_migrations`, in order, each in its own transaction. Tables are `STRICT`, and every table that holds agency data carries a `workspace_id`.
+
+## Accounts and sessions
+
+`001_identity.sql` adds `users`, `workspaces`, `memberships` (owner or member) and `sessions`. Signing up creates a user and a workspace they own. A user's `role` is `user` or `admin`.
+
+`src/server/services/auth-service.js` signs users up and in, and resolves sessions. `src/server/http/session.js` reads and writes the `xaeo_session` cookie and provides route guards:
+
+```js
+router.get(
+  '/api/app/me',
+  sessionHttp.authenticated(({ session }) => session.user),
+);
+router.get(
+  '/api/admin/users',
+  sessionHttp.adminOnly(() => listUsers()),
+);
+```
+
+A guarded handler receives `ctx.session` with `user` and `workspace`; services take `session.workspace.id` to scope their queries. The reasoning is in [ADR 0002](adr/0002-cookie-sessions-and-scrypt.md).
+
 ## Errors
 
 Services and routes throw `HttpError` (or one of the helpers in `src/server/lib/errors.js`). Every error response has the same shape:
@@ -58,6 +83,8 @@ Services and routes throw `HttpError` (or one of the helpers in `src/server/lib/
 
 - Security headers on every response: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Cross-Origin-Opener-Policy`.
 - Request bodies are size-limited and must be JSON.
+- Passwords are hashed with scrypt; sessions are random tokens stored only as SHA-256 hashes, in an `HttpOnly`, `SameSite=Lax` cookie that is `Secure` in production.
+- Repositories use bound parameters only.
 - Unexpected errors return a generic message; stacks stay in the server log.
 - The Docker image runs as the non-root `node` user.
 - Dependabot watches npm packages, GitHub Actions and the base image.

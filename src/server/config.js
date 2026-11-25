@@ -21,6 +21,13 @@ export function loadConfig(env = process.env) {
   if (!LOG_LEVELS.includes(logLevel))
     problems.push(`LOG_LEVEL must be one of ${LOG_LEVELS.join(', ')}`);
 
+  const sessionTtlDays = Number(env.SESSION_TTL_DAYS ?? 14);
+  if (!Number.isInteger(sessionTtlDays) || sessionTtlDays < 1 || sessionTtlDays > 90)
+    problems.push('SESSION_TTL_DAYS must be an integer between 1 and 90');
+
+  // Tests get a private in-memory database unless they ask for a file.
+  const databasePath = env.DATABASE_PATH || (nodeEnv === 'test' ? ':memory:' : 'data/xaeo.db');
+
   if (problems.length) throw new Error(`Invalid configuration:\n- ${problems.join('\n- ')}`);
 
   return Object.freeze({
@@ -29,5 +36,9 @@ export function loadConfig(env = process.env) {
     host: env.HOST || '127.0.0.1',
     port,
     logLevel,
+    databasePath,
+    sessionTtlMs: sessionTtlDays * 24 * 60 * 60 * 1000,
+    // Browsers only send Secure cookies over HTTPS, which production always uses.
+    secureCookies: nodeEnv === 'production',
   });
 }

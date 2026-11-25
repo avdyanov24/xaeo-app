@@ -15,7 +15,10 @@ All endpoints live under `/api` and speak JSON.
   | Status | `code`                   | When                                               |
   | ------ | ------------------------ | -------------------------------------------------- |
   | 400    | `bad_request`            | The body is not valid JSON                         |
+  | 401    | `unauthorized`           | No valid session, or wrong email or password       |
+  | 403    | `forbidden`              | Signed in, but the role does not allow this        |
   | 404    | `not_found`              | No such endpoint or resource                       |
+  | 409    | `conflict`               | The resource already exists                        |
   | 405    | `method_not_allowed`     | The path exists for other methods (see `Allow`)    |
   | 413    | `payload_too_large`      | The body is over the size limit                    |
   | 415    | `unsupported_media_type` | A body was sent without `application/json`         |
@@ -64,3 +67,43 @@ Any other `GET` or `HEAD` request outside `/api` is looked up in `src/web`, so `
 | Not served   | Directories, dotfiles (any path segment starting with `.`), and anything that resolves outside `src/web`, including through encoded `..`, encoded slashes, backslashes, NUL bytes and symlinks. These return `404`. |
 
 Other methods on a file path return `404`, and on a page route `405` with `Allow: GET`.
+
+## Authentication
+
+Signing up or in sets an `xaeo_session` cookie (`HttpOnly`, `SameSite=Lax`, `Secure` in production). Browsers send it automatically; endpoints marked **signed in** return 401 without it.
+
+The session body returned by these endpoints:
+
+```json
+{
+  "user": { "id": 1, "email": "alex@brightline.example", "name": "Alex Morgan", "role": "user" },
+  "workspace": { "id": 1, "name": "Brightline Digital", "role": "owner" }
+}
+```
+
+`user.role` is `user` or `admin`; `workspace.role` is `owner` or `member`.
+
+### `POST /api/auth/signup`
+
+Creates an account and a workspace the new user owns, and signs them in.
+
+| Field           | Rules                       |
+| --------------- | --------------------------- |
+| `name`          | 1 to 100 characters         |
+| `email`         | email address, unique       |
+| `password`      | 10 to 200 characters        |
+| `workspaceName` | the agency's name, 1 to 100 |
+
+`201` with the session body and the cookie. `409 conflict` if the email is taken, `422` for invalid fields.
+
+### `POST /api/auth/login`
+
+Body: `{ "email", "password" }`. `200` with the session body and a new cookie; any session the browser already had is ended. `401 unauthorized` with "Email or password is incorrect." for any wrong combination.
+
+### `POST /api/auth/logout`
+
+Ends the current session and clears the cookie. `204`, also when there was no session.
+
+### `GET /api/auth/session` (signed in)
+
+`200` with the session body for the cookie sent.

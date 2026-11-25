@@ -1,0 +1,24 @@
+/** SQL for the `users` table. Emails are compared case-insensitively (COLLATE NOCASE). */
+
+const COLUMNS = 'id, email, name, role, password_hash AS passwordHash, created_at AS createdAt';
+
+/** @returns {{ id: number, email: string, name: string, role: string, passwordHash: string, createdAt: string } | undefined} */
+export function findUserByEmail(db, email) {
+  return db.prepare(`SELECT ${COLUMNS} FROM users WHERE email = ?`).get(email);
+}
+
+export function findUserById(db, id) {
+  return db.prepare(`SELECT ${COLUMNS} FROM users WHERE id = ?`).get(id);
+}
+
+/** @returns {number} the new user's id */
+export function insertUser(db, { email, name, passwordHash, role = 'user' }) {
+  const result = db
+    .prepare('INSERT INTO users (email, name, password_hash, role) VALUES (?, ?, ?, ?)')
+    .run(email, name, passwordHash, role);
+  return Number(result.lastInsertRowid);
+}
+
+export function updatePasswordHash(db, id, passwordHash) {
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, id);
+}
