@@ -47,11 +47,11 @@ Schema changes are plain SQL files in `src/server/db/migrations`, named `NNN_nam
 ```js
 router.get(
   '/api/app/me',
-  sessionHttp.authenticated(({ session }) => session.user),
+  sessionHttp.requireUser(({ session }) => session.user),
 );
 router.get(
   '/api/admin/users',
-  sessionHttp.adminOnly(() => listUsers()),
+  sessionHttp.requireAdmin(() => listUsers()),
 );
 ```
 

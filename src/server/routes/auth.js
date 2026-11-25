@@ -19,7 +19,7 @@ const LOGIN = {
 
 /** Sign-up, sign-in, sign-out and the current session. */
 export function registerAuthRoutes(router, { auth, sessionHttp }) {
-  router.post('/api/auth/signup', async (ctx) => {
+  router.post('/api/signup', async (ctx) => {
     const input = validate(SIGNUP, await readJson(ctx.req));
     checkNewPassword(input.password);
     const result = await auth.signup(input);
@@ -27,7 +27,7 @@ export function registerAuthRoutes(router, { auth, sessionHttp }) {
     return { status: 201, body: sessionBody(result.session) };
   });
 
-  router.post('/api/auth/login', async (ctx) => {
+  router.post('/api/login', async (ctx) => {
     const input = validate(LOGIN, await readJson(ctx.req));
     if (typeof input.password !== 'string') throw unauthorized('Email or password is incorrect.');
     // Signing in again replaces any session this browser already had.
@@ -37,14 +37,14 @@ export function registerAuthRoutes(router, { auth, sessionHttp }) {
     return sessionBody(result.session);
   });
 
-  router.post('/api/auth/logout', (ctx) => {
+  router.post('/api/logout', (ctx) => {
     auth.logout(sessionHttp.readToken(ctx.req));
     sessionHttp.clearSessionCookie(ctx.res);
   });
 
   router.get(
-    '/api/auth/session',
-    sessionHttp.authenticated((ctx) => sessionBody(ctx.session)),
+    '/api/session',
+    sessionHttp.requireUser((ctx) => sessionBody(ctx.session)),
   );
 }
 

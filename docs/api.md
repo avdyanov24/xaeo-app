@@ -83,7 +83,7 @@ The session body returned by these endpoints:
 
 `user.role` is `user` or `admin`; `workspace.role` is `owner` or `member`.
 
-### `POST /api/auth/signup`
+### `POST /api/signup`
 
 Creates an account and a workspace the new user owns, and signs them in.
 
@@ -96,14 +96,14 @@ Creates an account and a workspace the new user owns, and signs them in.
 
 `201` with the session body and the cookie. `409 conflict` if the email is taken, `422` for invalid fields.
 
-### `POST /api/auth/login`
+### `POST /api/login`
 
 Body: `{ "email", "password" }`. `200` with the session body and a new cookie; any session the browser already had is ended. `401 unauthorized` with "Email or password is incorrect." for any wrong combination.
 
-### `POST /api/auth/logout`
+### `POST /api/logout`
 
 Ends the current session and clears the cookie. `204`, also when there was no session.
 
-### `GET /api/auth/session` (signed in)
+### `GET /api/session` (signed in)
 
 `200` with the session body for the cookie sent.

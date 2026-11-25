@@ -13,7 +13,7 @@ const SIGNUP = {
 const sessionCookie = (res) => res.headers['set-cookie']?.[0]?.split(';')[0];
 
 async function signUp(request, body = SIGNUP) {
-  const res = await request('POST', '/api/auth/signup', { json: body });
+  const res = await request('POST', '/api/signup', { json: body });
   return { res, cookie: sessionCookie(res) };
 }
 
@@ -43,7 +43,7 @@ describe('auth API', () => {
 
   it('signup validates every field and enforces the password length', async (t) => {
     const { request } = await startTestServer(t);
-    const res = await request('POST', '/api/auth/signup', { json: { email: 'not-an-email' } });
+    const res = await request('POST', '/api/signup', { json: { email: 'not-an-email' } });
     assert.equal(res.status, 422);
     assert.deepEqual(res.json.error.issues.map((issue) => issue.field).sort(), [
       'email',
@@ -51,7 +51,7 @@ describe('auth API', () => {
       'password',
       'workspaceName',
     ]);
-    const short = await request('POST', '/api/auth/signup', {
+    const short = await request('POST', '/api/signup', {
       json: { ...SIGNUP, password: 'short' },
     });
     assert.equal(short.status, 422);
@@ -68,13 +68,13 @@ describe('auth API', () => {
     assert.equal(res.json.error.code, 'conflict');
   });
 
-  it('GET /api/auth/session returns the session for the cookie and 401 without it', async (t) => {
+  it('GET /api/session returns the session for the cookie and 401 without it', async (t) => {
     const { request } = await startTestServer(t);
     const { cookie } = await signUp(request);
-    const signedIn = await request('GET', '/api/auth/session', { headers: { cookie } });
+    const signedIn = await request('GET', '/api/session', { headers: { cookie } });
     assert.equal(signedIn.status, 200);
     assert.equal(signedIn.json.user.email, SIGNUP.email);
-    const anonymous = await request('GET', '/api/auth/session');
+    const anonymous = await request('GET', '/api/session');
     assert.equal(anonymous.status, 401);
     assert.equal(anonymous.json.error.code, 'unauthorized');
   });
@@ -82,7 +82,7 @@ describe('auth API', () => {
   it('login sets a new session and replaces the old one', async (t) => {
     const { request } = await startTestServer(t);
     const { cookie: first } = await signUp(request);
-    const res = await request('POST', '/api/auth/login', {
+    const res = await request('POST', '/api/login', {
       json: { email: SIGNUP.email, password: SIGNUP.password },
       headers: { cookie: first },
     });
@@ -91,11 +91,11 @@ describe('auth API', () => {
     const second = sessionCookie(res);
     assert.notEqual(second, first);
     assert.equal(
-      (await request('GET', '/api/auth/session', { headers: { cookie: first } })).status,
+      (await request('GET', '/api/session', { headers: { cookie: first } })).status,
       401,
     );
     assert.equal(
-      (await request('GET', '/api/auth/session', { headers: { cookie: second } })).status,
+      (await request('GET', '/api/session', { headers: { cookie: second } })).status,
       200,
     );
   });
@@ -108,7 +108,7 @@ describe('auth API', () => {
       { email: 'nobody@example.com', password: 'whatever it is' },
       { email: SIGNUP.email, password: 12345 },
     ]) {
-      const res = await request('POST', '/api/auth/login', { json });
+      const res = await request('POST', '/api/login', { json });
       assert.equal(res.status, 401);
       assert.equal(res.json.error.message, 'Email or password is incorrect.');
       assert.equal(res.headers['set-cookie'], undefined);
@@ -118,15 +118,15 @@ describe('auth API', () => {
   it('logout ends the session and clears the cookie', async (t) => {
     const { request } = await startTestServer(t);
     const { cookie } = await signUp(request);
-    const res = await request('POST', '/api/auth/logout', { headers: { cookie } });
+    const res = await request('POST', '/api/logout', { headers: { cookie } });
     assert.equal(res.status, 204);
     assert.match(res.headers['set-cookie'][0], /^xaeo_session=; Path=\/; Max-Age=0;/);
-    assert.equal((await request('GET', '/api/auth/session', { headers: { cookie } })).status, 401);
+    assert.equal((await request('GET', '/api/session', { headers: { cookie } })).status, 401);
   });
 
   it('logout without a session still succeeds', async (t) => {
     const { request } = await startTestServer(t);
-    assert.equal((await request('POST', '/api/auth/logout')).status, 204);
+    assert.equal((await request('POST', '/api/logout')).status, 204);
   });
 
   it('stores no raw session tokens or plain passwords', async (t) => {
