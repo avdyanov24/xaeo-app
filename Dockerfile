@@ -13,10 +13,14 @@ RUN npm ci --omit=dev --ignore-scripts && mkdir -p node_modules
 
 FROM base AS runtime
 ENV HOST=0.0.0.0 \
-    PORT=3000
+    PORT=3000 \
+    DATABASE_PATH=/app/data/xaeo.db
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY src ./src
+# The SQLite file lives in /app/data; mount a volume there to keep it across containers.
+RUN mkdir -p /app/data && chown node:node /app/data
+VOLUME /app/data
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
