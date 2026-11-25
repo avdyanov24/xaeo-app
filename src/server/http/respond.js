@@ -26,3 +26,8 @@ export function sendError(res, status, code, message, details) {
   const headers = status === 405 && details?.allowed ? { Allow: details.allowed.join(', ') } : {};
   sendJson(res, status, { error: { code, message, ...details } }, headers);
 }
+
+/** Sends a 302 redirect. The browser must not cache it, because where `/` leads can change. */
+export function sendRedirect(res, location) {
+  res.writeHead(302, { Location: location, 'Cache-Control': 'no-store' }).end();
+}
