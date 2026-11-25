@@ -15,7 +15,7 @@ const T1 = Date.parse('2026-11-25T10:00:03Z');
 
 /** A scan in each state, built only through the public transitions. */
 const scanIn = {
-  queued: () => createScan({ now: T0 }),
+  queued: () => createScan({ total: 10, now: T0 }),
   running: () => applyEvent(scanIn.queued(), 'start', { now: T0 }),
   done: () => applyEvent(scanIn.running(), 'complete', { now: T1 }),
   failed: () => applyEvent(scanIn.running(), 'fail', { now: T1, error: 'Provider timed out.' }),
@@ -33,9 +33,11 @@ const ALLOWED = {
 
 describe('scan state machine', () => {
   it('starts queued with only a creation time', () => {
-    const scan = createScan({ now: T0 });
+    const scan = createScan({ total: 10, now: T0 });
     assert.deepEqual(scan, {
       state: 'queued',
+      total: 10,
+      completed: 0,
       createdAt: '2026-11-25T10:00:00.000Z',
       startedAt: null,
       finishedAt: null,

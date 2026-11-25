@@ -12,6 +12,8 @@ import { conflict } from '../../lib/errors.js';
  * @typedef {'queued' | 'running' | 'done' | 'failed' | 'cancelled'} ScanState
  * @typedef {object} Scan
  * @property {ScanState} state
+ * @property {number} total how many answers the scan will collect (questions x engines)
+ * @property {number} completed answers collected so far, so the UI can show progress
  * @property {string} createdAt ISO timestamp
  * @property {string | null} startedAt set when the scan starts running
  * @property {string | null} finishedAt set when it reaches done, failed or cancelled
@@ -35,10 +37,14 @@ export const SCAN_EVENTS = Object.freeze([
 
 const iso = (now) => new Date(now).toISOString();
 
-/** A new scan waiting to start. */
-export function createScan({ now = Date.now() } = {}) {
+/** A new scan waiting to start. `total` is the number of answers it will collect. */
+export function createScan({ total, now = Date.now() }) {
+  if (!Number.isInteger(total) || total < 1)
+    throw new TypeError('A scan needs a total of at least one answer.');
   return Object.freeze({
     state: 'queued',
+    total,
+    completed: 0,
     createdAt: iso(now),
     startedAt: null,
     finishedAt: null,
@@ -67,10 +73,27 @@ export function applyEvent(scan, event, { now = Date.now(), error } = {}) {
 
   const next = { ...scan, state: TRANSITIONS[scan.state][event] };
   if (event === 'start') next.startedAt = iso(now);
-  if (event === 'retry') Object.assign(next, { startedAt: null, finishedAt: null, error: null });
+  if (event === 'retry')
+    Object.assign(next, { completed: 0, startedAt: null, finishedAt: null, error: null });
   if (isFinished(next)) next.finishedAt = iso(now);
   if (event === 'fail') next.error = error ?? 'The scan failed.';
   return Object.freeze(next);
+}
+
+/**
+ * Counts one more collected answer. Only a running scan collects answers, and never more than `total`.
+ * @param {Scan} scan
+ */
+export function recordAnswer(scan) {
+  if (scan.state !== 'running') throw conflict(`A ${scan.state} scan is not collecting answers.`);
+  if (scan.completed >= scan.total)
+    throw conflict(`All ${scan.total} answers are already recorded.`);
+  return Object.freeze({ ...scan, completed: scan.completed + 1 });
+}
+
+/** @returns {{ completed: number, total: number, fraction: number }} fraction is 0 to 1 */
+export function progress(scan) {
+  return { completed: scan.completed, total: scan.total, fraction: scan.completed / scan.total };
 }
 
 // Used in the conflict message: "A done scan cannot be cancelled."
