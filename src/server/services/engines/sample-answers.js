@@ -5,7 +5,11 @@ const DEFAULT_FILE = new URL('./sample-answers.json', import.meta.url);
 
 /** Questions are matched ignoring case, repeated spaces and a trailing question mark. */
 export const questionKey = (question) =>
-  String(question).trim().replace(/\s+/g, ' ').replace(/\?+$/, '').toLowerCase();
+  String(question)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\?+$/, '')
+    .toLowerCase();
 
 /**
  * Checks the answer set once, so a typo in the file fails at start-up with a clear message
