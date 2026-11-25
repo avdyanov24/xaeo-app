@@ -6,6 +6,8 @@ import {
   canApply,
   createScan,
   isFinished,
+  progress,
+  recordAnswer,
   SCAN_EVENTS,
   SCAN_STATES,
 } from '../../../src/server/services/scans/scan-state.js';
@@ -116,5 +118,43 @@ describe('scan state machine', () => {
 
   it('throws a TypeError for an event that does not exist', () => {
     assert.throws(() => applyEvent(scanIn.queued(), 'pause'), TypeError);
+  });
+
+  describe('progress', () => {
+    it('counts answers one at a time while running', () => {
+      let scan = scanIn.running();
+      scan = recordAnswer(recordAnswer(scan));
+      assert.equal(scan.completed, 2);
+      assert.deepEqual(progress(scan), { completed: 2, total: 10, fraction: 0.2 });
+    });
+
+    it('does not record answers unless the scan is running', () => {
+      for (const state of ['queued', 'done', 'failed', 'cancelled']) {
+        assert.throws(
+          () => recordAnswer(scanIn[state]()),
+          (error) => error instanceof HttpError && error.status === 409,
+          state,
+        );
+      }
+    });
+
+    it('stops at the total', () => {
+      let scan = createScan({ total: 2, now: T0 });
+      scan = recordAnswer(applyEvent(scan, 'start'));
+      scan = recordAnswer(scan);
+      assert.throws(() => recordAnswer(scan), /All 2 answers are already recorded/);
+    });
+
+    it('keeps the count when a scan is cancelled and resets it on retry', () => {
+      const cancelled = applyEvent(recordAnswer(scanIn.running()), 'cancel');
+      assert.equal(cancelled.completed, 1);
+      assert.equal(applyEvent(cancelled, 'retry').completed, 0);
+    });
+
+    it('needs a whole number of answers of at least one', () => {
+      for (const total of [0, -1, 1.5, '10', undefined]) {
+        assert.throws(() => createScan({ total }), TypeError, String(total));
+      }
+    });
   });
 });
