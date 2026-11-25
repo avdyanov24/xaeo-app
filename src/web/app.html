@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Xaeo</title>
+    <link rel="icon" href="/assets/favicon/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/favicon/apple-touch-icon.png" />
+    <meta name="color-scheme" content="light dark" />
+    <script src="/prefs.js"></script>
+    <link rel="stylesheet" href="/ds/tokens/fonts.css" />
+    <link rel="stylesheet" href="/ds/tokens/colors.css?v=4" />
+    <link rel="stylesheet" href="/ds/tokens/typography.css" />
+    <link rel="stylesheet" href="/ds/tokens/spacing.css" />
+    <link rel="stylesheet" href="/ds/tokens/shape.css" />
+    <link rel="stylesheet" href="/ds/tokens/motion.css" />
+    <link rel="stylesheet" href="/ui/app.css?v=50" />
+    <script type="module" src="/ui/js/main.js"></script>
+  </head>
+  <body class="app-body">
+    <a class="skip" href="#view">Skip to content</a
+    ><a class="skip" href="#xo-panel" data-xo-skip hidden>Skip to Xo chat</a>
+    <aside class="sidebar" data-sidebar aria-label="Workspace">
+      <div class="sb-top">
+        <a class="sb-brand" href="#/" aria-label="Clients"
+          ><picture
+            ><source
+              media="(forced-colors: active) and (prefers-color-scheme: light)"
+              srcset="/assets/wordmark-48.webp 1x, /assets/wordmark-326.webp 2x" />
+            <img
+              src="/assets/wordmark-white-48.webp"
+              srcset="/assets/wordmark-white-48.webp 1x, /assets/wordmark-white-326.webp 2x"
+              width="163"
+              height="48"
+              alt="Xaeo" /></picture
+        ></a>
+        <button
+          type="button"
+          class="sb-icon-btn sb-collapse"
+          data-sb-collapse
+          aria-label="Collapse sidebar"
+          aria-expanded="true"
+          title="Collapse sidebar"
+        ></button>
+      </div>
+      <div class="menu-wrap sb-account-wrap">
+        <button
+          type="button"
+          class="sb-account"
+          data-sb-account
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="sb-account-menu"
+        >
+          <span class="sb-ws-tile" data-ws-initial aria-hidden="true"></span
+          ><span class="sb-label ws-name" data-ws-name></span
+          ><span class="sb-label sb-caret" data-sb-caret aria-hidden="true"></span>
+        </button>
+        <div
+          class="menu-panel account-menu sb-menu"
+          id="sb-account-menu"
+          role="menu"
+          aria-labelledby="sb-account-menu-who"
+          hidden
+        >
+          <div class="menu-head" role="none">
+            <span class="avatar avatar-lg" data-ws-initial aria-hidden="true"></span>
+            <p class="menu-who" id="sb-account-menu-who">
+              <strong data-ws-name></strong><span data-user-name></span
+              ><span class="menu-meta"><span data-user-role></span></span>
+            </p>
+          </div>
+          <a class="menu-item" role="menuitem" href="#/settings/appearance" data-appearance-item
+            >Appearance</a
+          >
+          <button type="button" class="menu-item" role="menuitem" data-tour-item>
+            Tour with Xo
+          </button>
+          <button type="button" class="menu-item" role="menuitem" data-shortcuts>
+            Keyboard shortcuts<kbd>?</kbd>
+          </button>
+          <hr class="menu-sep" role="separator" />
+          <a class="menu-item" role="menuitem" href="/team" data-team hidden>Team</a>
+          <a class="menu-item" role="menuitem" href="/account" data-account-item>Account</a>
+          <a class="menu-item" role="menuitem" href="/admin" data-admin hidden>Admin</a>
+          <hr class="menu-sep" role="separator" />
+          <button type="button" class="menu-item" role="menuitem" data-logout>Log out</button>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="sb-search"
+        data-palette
+        data-sb-search
+        aria-label="Search clients and actions"
+      ></button>
+      <nav class="sb-nav" aria-label="App">
+        <a href="#/" data-nav="clients" data-sb-icon="users"
+          ><span class="sb-label">Clients</span></a
+        >
+        <a href="#/approvals" data-nav="approvals" data-sb-icon="inbox" data-xo-nav hidden
+          ><span class="sb-label">Approvals</span
+          ><span class="count nav-count" data-pending-badge hidden></span
+        ></a>
+        <a href="#/engines" data-nav="engines" data-sb-icon="sparkles"
+          ><span class="sb-label">Engines</span></a
+        >
+        <a href="#/settings" data-nav="settings" data-sb-icon="settings"
+          ><span class="sb-label">Settings</span></a
+        >
+      </nav>
+      <section class="sb-clients" aria-labelledby="sb-clients-title">
+        <div class="sb-section-head">
+          <h2 class="sb-label" id="sb-clients-title">Clients</h2>
+          <a
+            class="sb-icon-btn sb-add"
+            href="#/new"
+            aria-label="Add a client"
+            title="Add a client"
+            data-sb-icon="plus"
+          ></a>
+        </div>
+        <ul class="sb-client-list" data-sb-clients></ul>
+        <a class="sb-row sb-add-row" href="#/new" data-sb-icon="plus"
+          ><span class="sb-label">Add a client</span></a
+        >
+      </section>
+      <div class="sb-foot">
+        <button
+          type="button"
+          class="sb-xo"
+          data-xo-open
+          data-tour="ask-xo"
+          data-no-icon
+          aria-label="Ask Xo"
+          aria-keyshortcuts="x"
+          title="Ask Xo (press X)"
+          aria-controls="xo-panel"
+          aria-expanded="false"
+          hidden
+        >
+          <span class="sb-xo-figure" data-sb-xo aria-hidden="true"></span
+          ><span class="sb-xo-icon" data-sb-icon="message" aria-hidden="true"></span
+          ><span class="sb-label sb-xo-text"
+            ><strong>Ask Xo</strong><span>Questions, drafts and fixes for any client</span></span
+          ><span class="sb-label sb-xo-key" data-sb-xo-key hidden>Press X</span>
+        </button>
+        <a class="sb-engine" href="#/engines" data-sb-engine hidden></a>
+      </div>
+    </aside>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="#/" aria-label="Clients"
+          ><img
+            class="wm-light"
+            src="/assets/wordmark-163.webp"
+            srcset="/assets/wordmark-163.webp 1x, /assets/wordmark-326.webp 2x"
+            width="163"
+            height="48"
+            alt="Xaeo" /><img
+            class="wm-dark"
+            src="/assets/wordmark-white-48.webp"
+            srcset="/assets/wordmark-white-48.webp 1x, /assets/wordmark-white-326.webp 2x"
+            width="163"
+            height="48"
+            alt="Xaeo"
+        /></a>
+        <a class="engine-chip" href="#/engines" data-engine-chip hidden></a>
+        <nav class="topnav" aria-label="App">
+          <a href="#/" data-nav="clients">Clients</a
+          ><a href="#/approvals" data-nav="approvals" data-xo-nav data-tour="approvals" hidden
+            >Approvals<span class="count nav-count" data-pending-badge hidden></span></a
+          ><a href="#/engines" data-nav="engines">Engines</a>
+        </nav>
+        <div class="topbar-actions">
+          <button
+            type="button"
+            class="palette-btn"
+            data-palette
+            aria-label="Search clients and actions"
+          ></button>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm xo-btn"
+            data-xo-open
+            data-tour="ask-xo"
+            aria-controls="xo-panel"
+            aria-expanded="false"
+            aria-keyshortcuts="x"
+            title="Ask Xo (press X)"
+            hidden
+          >
+            <span>Ask Xo</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm tour-btn" data-tour-start hidden>
+            <span>Tour with Xo</span>
+          </button>
+          <div class="menu-wrap desk-only">
+            <button
+              type="button"
+              class="icon-btn"
+              data-help-btn
+              aria-label="Help"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="help-menu"
+              title="Help"
+            ></button>
+            <div class="menu-panel" id="help-menu" role="menu" aria-label="Help" hidden>
+              <button type="button" class="menu-item" role="menuitem" data-tour-item>
+                Tour with Xo
+              </button>
+              <button type="button" class="menu-item" role="menuitem" data-shortcuts>
+                Keyboard shortcuts<kbd>?</kbd>
+              </button>
+            </div>
+          </div>
+          <div class="menu-wrap desk-only">
+            <button
+              type="button"
+              class="account-btn"
+              data-account-btn
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="account-menu"
+            >
+              <span class="avatar" data-ws-initial aria-hidden="true"></span
+              ><span class="ws-name" data-ws-name></span
+              ><span class="account-caret" data-caret aria-hidden="true"></span>
+            </button>
+            <div
+              class="menu-panel account-menu"
+              id="account-menu"
+              role="menu"
+              aria-labelledby="account-menu-who"
+              hidden
+            >
+              <div class="menu-head" role="none">
+                <span class="avatar avatar-lg" data-ws-initial aria-hidden="true"></span>
+                <p class="menu-who" id="account-menu-who">
+                  <strong data-ws-name></strong><span data-user-name></span
+                  ><span class="menu-meta"><span data-user-role></span></span>
+                </p>
+              </div>
+              <a
+                class="menu-item"
+                role="menuitem"
+                href="#/settings"
+                data-nav="settings"
+                data-settings-item
+                >Settings<kbd>G S</kbd></a
+              >
+              <a class="menu-item" role="menuitem" href="#/settings/appearance" data-appearance-item
+                >Appearance</a
+              >
+              <button type="button" class="menu-item" role="menuitem" data-shortcuts>
+                Keyboard shortcuts<kbd>?</kbd>
+              </button>
+              <hr class="menu-sep" role="separator" />
+              <a class="menu-item" role="menuitem" href="/team" data-team hidden>Team</a>
+              <a class="menu-item" role="menuitem" href="/account" data-account-item>Account</a>
+              <a class="menu-item" role="menuitem" href="/admin" data-admin hidden>Admin</a>
+              <hr class="menu-sep" role="separator" />
+              <button type="button" class="menu-item" role="menuitem" data-logout>Log out</button>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="menu-btn account-sheet-btn phone-only"
+            data-menu-btn
+            aria-label="Account"
+            aria-expanded="false"
+            aria-controls="app-menu"
+          >
+            <span class="avatar" data-ws-initial aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+      <div class="menu-sheet" id="app-menu" hidden>
+        <div class="menu-head">
+          <span class="avatar avatar-lg" data-ws-initial aria-hidden="true"></span>
+          <p class="menu-who">
+            <strong data-ws-name></strong><span data-user-name></span
+            ><span class="menu-meta"><span data-user-role></span></span>
+          </p>
+        </div>
+        <a class="menu-item" href="#/settings" data-nav="settings" data-settings-item>Settings</a>
+        <a class="menu-item" href="#/engines" data-nav="engines" data-engines-item
+          >Engines and usage</a
+        >
+        <a class="menu-item" href="#/settings/appearance" data-appearance-item>Appearance</a>
+        <button type="button" class="menu-item" data-tour-item>Tour with Xo</button>
+        <button type="button" class="menu-item" data-shortcuts>Keyboard shortcuts</button>
+        <hr class="menu-sep" />
+        <a class="menu-item" href="/team" data-team hidden>Team</a>
+        <a class="menu-item" href="/account" data-account-item>Account</a>
+        <a class="menu-item" href="/admin" data-admin hidden>Admin</a>
+        <hr class="menu-sep" />
+        <button type="button" class="menu-item" data-logout>Log out</button>
+      </div>
+    </header>
+    <div class="menu-scrim" aria-hidden="true"></div>
+    <div class="engine-bar" role="note" data-engine-bar>
+      <span class="bar-dot"></span
+      ><span class="bar-msg"
+        ><strong>Sample data</strong
+        ><span class="bar-text">: scripted answers, not live AI engines.</span></span
+      >
+    </div>
+    <!-- Phone bottom bar sits before main in the DOM: it is fixed to the bottom, so the visual order is unchanged, and
+     keyboard users reach Clients / Approvals / Ask Xo in the first few Tab stops instead of after the whole view. -->
+    <nav class="bottom-nav" data-bottom-nav aria-label="App sections">
+      <a class="bn-item" href="#/" data-nav="clients" data-bn-icon="users"
+        ><span class="bn-label">Clients</span></a
+      >
+      <a
+        class="bn-item"
+        href="#/approvals"
+        data-nav="approvals"
+        data-bn-icon="inbox"
+        data-xo-nav
+        hidden
+        ><span class="bn-label">Approvals</span
+        ><span class="bn-badge" data-pending-badge hidden></span
+      ></a>
+      <a class="bn-item" href="#/settings" data-nav="settings" data-bn-icon="settings"
+        ><span class="bn-label">Settings</span></a
+      >
+      <button
+        type="button"
+        class="bn-item"
+        data-xo-open
+        data-bn-icon="message"
+        aria-controls="xo-panel"
+        aria-expanded="false"
+        hidden
+      >
+        <span class="bn-label">Ask Xo</span>
+      </button>
+      <button
+        type="button"
+        class="bn-item"
+        data-bottom-search
+        data-bn-icon="search"
+        aria-haspopup="dialog"
+      >
+        <span class="bn-label">Search</span>
+      </button>
+      <span class="bn-ink" aria-hidden="true"></span>
+    </nav>
+    <main id="view" class="view" tabindex="-1"></main>
+  </body>
+</html>

@@ -9,7 +9,8 @@ export default [
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      eqeqeq: ['error', 'always'],
+      // `x == null` is the one loose comparison the web code uses on purpose: null or undefined.
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'prefer-const': 'error',
     },
   },

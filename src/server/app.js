@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { createRouter } from './http/router.js';
 import { createSessionHttp } from './http/session.js';
+import { createStaticFiles } from './http/static.js';
 import { sendError, sendJson, setSecurityHeaders } from './http/respond.js';
-import { HttpError } from './lib/errors.js';
+import { HttpError, notFound } from './lib/errors.js';
 import { registerRoutes } from './routes/index.js';
 import { createAuthService } from './services/auth-service.js';
 
@@ -11,16 +13,28 @@ const { version } = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
 );
 
+const DEFAULT_WEB_ROOT = fileURLToPath(new URL('../web', import.meta.url));
+
 /**
  * Builds the request handler. Route handlers receive a context object and either
  * return a value (sent as 200 JSON), return `{ status, body }`, or write to `ctx.res` themselves.
- * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger>, db: import('node:sqlite').DatabaseSync }} deps
+ * Requests that match no route and are not under `/api` fall through to the static files in `webRoot`.
+ * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger>, db: import('node:sqlite').DatabaseSync, webRoot?: string }} deps
  */
-export function createApp({ config, logger, db }) {
+export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
   const auth = createAuthService({ db, sessionTtlMs: config.sessionTtlMs });
   const sessionHttp = createSessionHttp({ auth, config });
   const router = createRouter();
-  registerRoutes(router, { config, logger, version, startedAt: Date.now(), auth, sessionHttp });
+  const staticFiles = createStaticFiles({ root: webRoot });
+  registerRoutes(router, {
+    config,
+    logger,
+    version,
+    startedAt: Date.now(),
+    auth,
+    sessionHttp,
+    staticFiles,
+  });
 
   return async function handle(req, res) {
     const started = process.hrtime.bigint();
@@ -31,7 +45,12 @@ export function createApp({ config, logger, db }) {
     const url = new URL(req.url ?? '/', 'http://localhost');
     try {
       const found = router.match(req.method ?? 'GET', url.pathname);
-      if (!found) throw new HttpError(404, 'not_found', 'Not found.');
+      if (!found) {
+        const isFileRequest = req.method === 'GET' || req.method === 'HEAD';
+        if (!isFileRequest || url.pathname.startsWith('/api/')) throw notFound();
+        await staticFiles.serve(req, res, url.pathname);
+        return;
+      }
 
       const result = await found.handler({ req, res, url, params: found.params, requestId });
       if (!res.headersSent) {
