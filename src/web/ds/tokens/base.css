@@ -1,0 +1,53 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--lh-md);
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-heavy);
+  margin: 0;
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+a {
+  color: var(--text-link);
+  text-decoration: none;
+  font-weight: var(--weight-semibold);
+}
+@media (hover: hover) {
+  a:hover {
+    color: var(--cobalt-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+} /* no sticky hover after a tap */
+code,
+pre {
+  font-family: var(--font-mono);
+}
+::selection {
+  background: var(--pale-blue);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
