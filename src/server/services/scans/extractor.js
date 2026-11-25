@@ -9,9 +9,16 @@
  * @property {number} end offset just after the last character
  *
  * @typedef {object} ExtractContext
- * @property {{ name: string }} client the business the scan is for
+ * @property {{ name: string, domain: string }} client the business the scan is for and its website
  * @property {string[]} [competitors] other business names to look for
  */
+
+/** The labels the web app shows for one answer. `Cited` means named and the client's site is a source. */
+export const LABELS = Object.freeze({
+  cited: 'Cited',
+  mentioned: 'Mentioned',
+  notMentioned: 'Not mentioned',
+});
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -51,4 +58,42 @@ export function extractMentions(text, { client, competitors = [] }) {
     competitors: entities.filter((e) => e.classification === 'competitor').map((e) => e.quote),
     entities,
   };
+}
+
+/** Host of a URL without a leading `www.`, lower-case, or null when it is not an http(s) URL. */
+export function domainOf(url) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    if (protocol !== 'http:' && protocol !== 'https:') return null;
+    return hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+}
+
+/** True when `host` is the client's domain or one of its subdomains. */
+const isClientHost = (host, domain) => host === domain || host.endsWith(`.${domain}`);
+
+/**
+ * Works out how the client appears in one engine answer.
+ * Citations that are not usable URLs are dropped. The client counts as cited when any citation is
+ * on its own domain, even if the answer text never names it; the label stays `Not mentioned` then,
+ * because a link alone does not mean the engine recommended the business.
+ * @param {{ text: string, citations: { url: string, title?: string }[] }} answer
+ * @param {ExtractContext} context
+ */
+export function extractAnswer(answer, context) {
+  const mentions = extractMentions(answer.text, context);
+  const domain = context.client.domain.toLowerCase().replace(/^www\./, '');
+
+  const citations = answer.citations.flatMap((citation) => {
+    const host = domainOf(citation.url);
+    return host ? [{ url: citation.url, title: citation.title ?? host, domain: host }] : [];
+  });
+  const citedUrls = citations.filter((c) => isClientHost(c.domain, domain)).map((c) => c.url);
+  const cited = citedUrls.length > 0;
+
+  const label = !mentions.mentioned ? LABELS.notMentioned : cited ? LABELS.cited : LABELS.mentioned;
+
+  return { ...mentions, cited, citedUrls, citations, label };
 }
