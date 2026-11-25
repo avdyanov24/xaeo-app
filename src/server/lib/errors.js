@@ -31,6 +31,10 @@ export const methodNotAllowed = (allowed) =>
   new HttpError(405, 'method_not_allowed', 'Method not allowed.', { allowed });
 export const conflict = (message = 'The resource already exists.') =>
   new HttpError(409, 'conflict', message);
+export const tooManyRequests = (retryAfterSeconds) =>
+  new HttpError(429, 'too_many_requests', 'Too many attempts. Try again later.', {
+    retryAfterSeconds,
+  });
 export const payloadTooLarge = (limit) =>
   new HttpError(413, 'payload_too_large', `Request body is larger than ${limit} bytes.`);
 export const unsupportedMediaType = (expected) =>

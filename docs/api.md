@@ -21,6 +21,7 @@ All endpoints live under `/api` and speak JSON.
   | 409    | `conflict`               | The resource already exists                        |
   | 405    | `method_not_allowed`     | The path exists for other methods (see `Allow`)    |
   | 413    | `payload_too_large`      | The body is over the size limit                    |
+  | 429    | `too_many_requests`      | Too many failed sign-ins; see `Retry-After`        |
   | 415    | `unsupported_media_type` | A body was sent without `application/json`         |
   | 422    | `validation_failed`      | Input failed validation; `issues` lists each field |
   | 500    | `internal_error`         | Unexpected server error                            |
@@ -98,7 +99,7 @@ Creates an account and a workspace the new user owns, and signs them in.
 
 ### `POST /api/login`
 
-Body: `{ "email", "password" }`. `200` with the session body and a new cookie; any session the browser already had is ended. `401 unauthorized` with "Email or password is incorrect." for any wrong combination.
+Body: `{ "email", "password" }`. `200` with the session body and a new cookie; any session the browser already had is ended. `401 unauthorized` with "Email or password is incorrect." for any wrong combination. After 5 failed attempts for the same email from the same address within 15 minutes, `429 too_many_requests` with a `Retry-After` header (seconds); a successful login clears the count.
 
 ### `POST /api/logout`
 

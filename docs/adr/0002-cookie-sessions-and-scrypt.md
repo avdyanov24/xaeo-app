@@ -23,4 +23,5 @@ The usual options were signed tokens (JWTs) kept by the browser, or random sessi
 - A copied database cannot be used to sign in: it holds no raw tokens and no plain passwords.
 - One indexed lookup per signed-in request; with SQLite in the same process this costs microseconds.
 - Cross-site requests: `SameSite=Lax` stops other sites from sending the cookie on `POST`, and JSON bodies need a CORS preflight that the API never grants. If the API is ever opened to other origins, add explicit CSRF tokens.
-- Not covered yet: rate limiting of login attempts, password reset and email verification. They need their own changes.
+- Failed logins are limited in memory per client address and email (5 per 15 minutes). The count is per process and resets on restart; several instances would need a shared store.
+- Not covered: password reset and email verification.

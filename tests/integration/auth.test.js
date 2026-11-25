@@ -140,4 +140,26 @@ describe('auth API', () => {
     assert.ok(!dump.includes(token));
     assert.ok(!dump.includes(SIGNUP.password));
   });
+
+  it('rate-limits repeated wrong passwords with 429 and Retry-After', async (t) => {
+    const { request } = await startTestServer(t);
+    await signUp(request);
+    const attempt = (password) =>
+      request('POST', '/api/login', { json: { email: SIGNUP.email, password } });
+    for (let i = 0; i < 5; i += 1) assert.equal((await attempt('wrong password')).status, 401);
+    const blocked = await attempt(SIGNUP.password);
+    assert.equal(blocked.status, 429);
+    assert.equal(blocked.json.error.code, 'too_many_requests');
+    assert.ok(Number(blocked.headers['retry-after']) > 0);
+  });
+
+  it('a successful login clears earlier failures', async (t) => {
+    const { request } = await startTestServer(t);
+    await signUp(request);
+    const attempt = (password) =>
+      request('POST', '/api/login', { json: { email: SIGNUP.email, password } });
+    for (let i = 0; i < 4; i += 1) await attempt('wrong password');
+    assert.equal((await attempt(SIGNUP.password)).status, 200);
+    for (let i = 0; i < 4; i += 1) assert.equal((await attempt('wrong password')).status, 401);
+  });
 });
