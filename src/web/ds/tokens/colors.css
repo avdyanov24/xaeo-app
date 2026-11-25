@@ -1,0 +1,169 @@
+/* Light is the default for every page. The agency app and account pages also get a dark theme:
+   /prefs.js sets <html data-theme="light|dark"> before the first paint, and the dark values live ONLY under
+   :root[data-theme="dark"] (never a bare prefers-color-scheme query), so the landing and the white-label report,
+   which never set data-theme, stay exactly as they are. `.theme-light` inside the dark app re-declares the light
+   palette for surfaces that show the always-light report (cover preview, report thumbnails). docs/app.md "Theme". */
+:root,
+:root[data-theme='dark'] .theme-light {
+  /* Brand palette - from Xaeo brand basics, Sept 2026 */
+  --cobalt: #1f3bff; /* primary brand: logo on light, buttons, links, hero/pricing/final CTA */
+  --cobalt-deep: #1429b8; /* 4px button edge, pressed states, shade side of cobalt shapes */
+  --pale-blue: #c9d1ff; /* card shadows + borders on white, secondary button edge, dividers, tags */
+  --mist: #eef1ff; /* alternating section background */
+  --white: #ffffff; /* main background; text + logo on cobalt */
+  --ink: #0a0f33; /* headings, body, icons, logo on light */
+  --slate: #4a5275; /* secondary text, captions, labels */
+  --signal-red: #ff3b30; /* RESERVED: logo center square + mascot only. Never text, never decoration */
+  --green: #22c55e; /* PRODUCT UI ONLY: fix completed, check passed, progress, Strong evidence */
+  --sun: #ffc61a; /* PRODUCT UI ONLY: warnings, Medium evidence, chart highlights */
+
+  /* Derived (product UI support; one step from the palette, flat) */
+  --cobalt-hover: #3550ff;
+  --pale-blue-strong: #aeb9ff;
+  --green-deep: #16a34a;
+  --green-tint: #dcfce7;
+  --sun-deep: #e0a800;
+  --sun-tint: #fff4cc;
+  --ink-soft: #1c2250;
+
+  /* Product UI only (docs/app-redesign.md §4): AA status text, WCAG 1.4.11 control borders */
+  --green-ink: #166534; /* Strong evidence / Mentioned text on --green-tint */
+  --sun-ink: #7a5200; /* Medium evidence / warning text on --sun-tint */
+  --border-input: #848ec4; /* resting border of inputs, selects, switches, checkboxes (3:1 on white); cards keep pale-blue */
+  --row-hover: #f7f8ff; /* table row hover */
+
+  /* Product UI roles that must not flip with the theme (same value in light and dark unless the dark block says so) */
+  --accent-fg: var(
+    --cobalt
+  ); /* cobalt used as text, icons, lines and rings (fills keep --cobalt) */
+  --on-fill: #ffffff; /* text and icons on cobalt, green and ink-panel fills */
+  --on-sun: #0a0f33; /* text on a sun fill */
+  --surface-panel: var(--ink); /* toasts, tooltips, chart tips, engine bar, ink cards */
+  --on-panel-muted: #c9d1ff; /* quiet text on ink panels and code */
+  --panel-hover: rgba(255, 255, 255, 0.12);
+  --panel-hover-soft: rgba(255, 255, 255, 0.08);
+  --topbar-glass: rgba(255, 255, 255, 0.82);
+  --tab-hover: rgba(255, 255, 255, 0.6);
+  --nav-hover: rgba(255, 255, 255, 0.7);
+  --knob-edge: rgba(10, 15, 51, 0.15); /* switch knob edge */
+  --switch-on: var(--cobalt); /* checked switch and checkbox fill */
+  --switch-on-knob: #ffffff; /* knob on a checked switch */
+  --scrim-strong: rgba(10, 15, 51, 0.55); /* tour spotlight */
+  --line-soft: var(--mist); /* account pages: rules and header-link fills that sit on the page */
+  --edge-primary: var(--cobalt-deep); /* flat 4px edge under cobalt buttons and cobalt shapes */
+  --edge-secondary: var(--pale-blue); /* border + flat edge of secondary (white) buttons */
+  --edge-secondary-strong: var(--pale-blue-strong); /* secondary button hover edge */
+  /* Code on ink (same in both themes: code surfaces stay ink) */
+  --code-gutter: #7e87b8;
+  --code-tag: #8c9cff;
+  --code-str: #ffffff;
+  --code-key: #b4c0ff;
+  --code-punct: #8690c4; /* 6.0:1 on ink (#6E78A8 was 4.35:1) */
+  --code-ok: #7ee2a4;
+  --code-add: #86efac;
+  --code-del: #9aa3cf;
+  --code-hole-bg: rgba(255, 198, 26, 0.18);
+
+  /* Semantic aliases */
+  --bg-page: var(--white);
+  --bg-section: var(--mist);
+  --bg-brand: var(--cobalt);
+  --bg-inverse: var(--ink);
+  --surface-card: var(--white);
+  --surface-sunken: var(--mist);
+  --surface-code: var(--ink);
+  --border-soft: var(--pale-blue);
+  --border-strong: var(--pale-blue-strong);
+  --divider: var(--pale-blue);
+  --text-primary: var(--ink);
+  --text-secondary: var(--slate);
+  --text-on-brand: var(--white);
+  --text-link: var(--accent-fg);
+  --icon-primary: var(--ink);
+  --action-primary: var(--cobalt);
+  --action-primary-edge: var(--cobalt-deep);
+  --action-secondary: var(--white);
+  --action-secondary-edge: var(--pale-blue);
+  --focus-ring: var(--accent-fg);
+  --status-success: var(--green);
+  --status-success-bg: var(--green-tint);
+  --status-warning: var(--sun);
+  --status-warning-bg: var(--sun-tint);
+  --status-neutral-bg: var(--mist);
+  --logo-spot: var(--signal-red);
+  /* A+ desktop app shell (ui/app.css "A+ desktop"): the ink sidebar and hairline surfaces. */
+  --sidebar-bg: var(--ink);
+  --sidebar-fg: #ffffff;
+  --sidebar-muted: #a9b1da; /* 8.6:1 on the ink sidebar */
+  --sidebar-hover: rgba(255, 255, 255, 0.07);
+  --sidebar-active: rgba(255, 255, 255, 0.12);
+  --sidebar-line: rgba(255, 255, 255, 0.09);
+  --sidebar-card: #161c4a;
+  --hairline: #e1e6fb; /* 1px panel and row rules on the white canvas */
+  --band: var(--cobalt); /* the one colour block per screen (overview scan band) */
+  --on-band-muted: rgba(255, 255, 255, 0.86);
+}
+
+/* Native controls, scrollbars and autofill follow the theme. */
+:root[data-theme='light'],
+:root[data-theme='dark'] .theme-light {
+  color-scheme: light;
+}
+
+/* Dark theme (agency app + account pages only). Flat navy from the brand's ink family: page = ink, cards a step
+   lighter, borders mid navy, near-white text. Roles keep their token names so app CSS needs no theme branches:
+   --white = card surface, --mist = page and sunken, --pale-blue = borders and flat edges, --ink = primary text,
+   --slate = secondary text. Contrast (WCAG): text 14.7:1 on card / 16.5:1 on page; slate 7.9 / 8.9; accent-fg
+   (links, cobalt text, rings) 6.5 / 7.3, 4.5 on the border-colour tag fill; border-input 4.2:1 on card;
+   white on cobalt 6.7:1; green-ink 9.0:1 and sun-ink 9.5:1 on their tints. */
+@media screen {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --white: #141a46;
+    --mist: #0a0f33;
+    --ink: #eef1ff;
+    --slate: #a9b1da;
+    --pale-blue: #2a3373;
+    --pale-blue-strong: #3d4794;
+    --green-tint: #0e3a2b;
+    --green-ink: #86efac;
+    --sun-tint: #3a2f0a;
+    --sun-ink: #ffd666;
+    --border-input: #6f7bc0;
+    --row-hover: #1b2256;
+    --line-soft: #222a5e;
+    --accent-fg: #8c9bff;
+    --switch-on: #8c9bff; /* 6.5:1 on card; ink knob and ink check on it 7.3:1 */
+    --switch-on-knob: #0a0f33;
+    --surface-panel: #262e6b;
+    --surface-code: #0a0f33;
+    --bg-page: #0a0f33;
+    --bg-inverse: #262e6b;
+    --topbar-glass: rgba(20, 26, 70, 0.85);
+    --tab-hover: rgba(255, 255, 255, 0.06);
+    --nav-hover: rgba(255, 255, 255, 0.06);
+    --knob-edge: rgba(0, 0, 0, 0.4);
+    /* R9: button edges reach 3:1 on navy (cobalt-deep was 1.6:1, the pale-blue edge 1.4:1): a lit cobalt lip under
+   primaries (3.8:1 on card, 4.3 on page) and the input edge colour around secondaries (4.2 / 4.7). */
+    --edge-primary: #5468ff;
+    --edge-secondary: #6f7bc0;
+    --edge-secondary-strong: #8c9bff;
+    --scrim: rgba(3, 5, 20, 0.6);
+    --scrim-strong: rgba(3, 5, 20, 0.72);
+    --sidebar-bg: #03051a; /* a step deeper than the page so the sidebar reads as its own plane on the dark canvas */
+    --sidebar-fg: #eef1ff;
+    --sidebar-line: #3a4590; /* the 1px edge to the canvas (1.6:1 on the canvas, a clear line) */
+    --sidebar-card: #11174a;
+    --hairline: #263070;
+    --band: #2a44ff;
+  }
+}
+
+/* Paper is always ink on white: the dark tokens above are screen-only, so printing (and Save as PDF) in the dark
+   theme resolves the light palette from :root. Anything themed outside this file follows: app.css / portal.css keep
+   their dark-only rules (white wordmark, light chevron, ink check) under @media screen too. */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+}
