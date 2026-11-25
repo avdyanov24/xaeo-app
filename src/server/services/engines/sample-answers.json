@@ -1,0 +1,86 @@
+{
+  "client": {
+    "name": "Northside Plumbing",
+    "domain": "northsideplumbing.co.uk",
+    "city": "Leeds"
+  },
+  "competitors": ["Rapid Flow", "CityPipe"],
+  "questions": [
+    "Who is the best emergency plumber in Leeds?",
+    "Which plumber should I call for a leaking boiler in Leeds?",
+    "Who fits new bathrooms in Leeds?",
+    "Who can unblock a drain in Leeds today?",
+    "How do I find a trustworthy plumber in Leeds?"
+  ],
+  "answers": {
+    "Who is the best emergency plumber in Leeds?": {
+      "chatgpt": {
+        "text": "For an emergency plumber in Leeds, Rapid Flow and CityPipe are the two names that come up most for out-of-hours call-outs. Phone both, ask for an arrival time, and check whether the call-out fee is quoted before they set off.",
+        "citations": [
+          { "url": "https://rapidflow.example/emergency", "title": "Emergency plumbing in Leeds" },
+          { "url": "https://citypipe.example/call-out", "title": "24 hour call-out" }
+        ]
+      },
+      "claude": {
+        "text": "Rapid Flow is a common first call for emergency plumbing in Leeds. Northside Plumbing is another local option that takes urgent jobs, and CityPipe also covers the area. Whoever you ring, ask for a firm arrival time and the call-out fee up front.",
+        "citations": [
+          { "url": "https://rapidflow.example/emergency", "title": "Emergency plumbing in Leeds" },
+          { "url": "https://citypipe.example/call-out", "title": "24 hour call-out" }
+        ]
+      }
+    },
+    "Which plumber should I call for a leaking boiler in Leeds?": {
+      "chatgpt": {
+        "text": "For a leaking boiler in Leeds, CityPipe lists boiler leak repairs on its site. Turn the boiler off, shut the water isolation valve if you can reach it, and only let a gas-registered engineer open the casing.",
+        "citations": [{ "url": "https://citypipe.example/boilers", "title": "Boiler repairs" }]
+      },
+      "claude": {
+        "text": "A leaking boiler needs a gas-registered engineer. In Leeds, Rapid Flow and CityPipe both advertise boiler repairs. Switch the boiler off first and keep a bowl under the leak until they arrive.",
+        "citations": [
+          { "url": "https://rapidflow.example/boilers", "title": "Boiler repairs and servicing" },
+          { "url": "https://citypipe.example/boilers", "title": "Boiler repairs" }
+        ]
+      }
+    },
+    "Who fits new bathrooms in Leeds?": {
+      "chatgpt": {
+        "text": "Rapid Flow fits complete bathrooms in Leeds, from stripping out the old suite to tiling. Ask for a written quote that lists what is included, and check how long the fitting is expected to take.",
+        "citations": [{ "url": "https://rapidflow.example/bathrooms", "title": "Bathroom fitting" }]
+      },
+      "claude": {
+        "text": "Bathroom fitting in Leeds is done by a mix of plumbing firms and specialist fitters. CityPipe is one that lists bathroom installs. Compare written quotes, and ask to see photos of finished bathrooms.",
+        "citations": [{ "url": "https://citypipe.example/bathrooms", "title": "Bathroom installs" }]
+      }
+    },
+    "Who can unblock a drain in Leeds today?": {
+      "chatgpt": {
+        "text": "For a blocked drain in Leeds today, try Rapid Flow, CityPipe or Northside Plumbing. Northside lists drain unblocking on its own page, so it is worth a call. Say whether it is a sink, toilet or outside drain when you ring.",
+        "citations": [
+          { "url": "https://rapidflow.example/drains", "title": "Drain unblocking" },
+          { "url": "https://citypipe.example/drains", "title": "Blocked drains" },
+          {
+            "url": "https://northsideplumbing.co.uk/blocked-drains",
+            "title": "Blocked drains in Leeds"
+          }
+        ]
+      },
+      "claude": {
+        "text": "Rapid Flow and CityPipe both list drain unblocking for Leeds. A sink or toilet blockage can often be cleared the same day, but a blocked outside drain may need a camera check first, so say which one it is when you call.",
+        "citations": [
+          { "url": "https://rapidflow.example/drains", "title": "Drain unblocking" },
+          { "url": "https://citypipe.example/drains", "title": "Blocked drains" }
+        ]
+      }
+    },
+    "How do I find a trustworthy plumber in Leeds?": {
+      "chatgpt": {
+        "text": "Start with recommendations from neighbours, then check that the plumber is registered for the work they will do, that they carry insurance and that they give a written quote. Read recent reviews for details about timekeeping and tidiness, not only the star rating.",
+        "citations": []
+      },
+      "claude": {
+        "text": "Ask for a written quote from two or three Leeds plumbers, confirm they are registered for the type of work, and ask about insurance and guarantees. Reviews that describe the job in detail are more useful than a high score on its own.",
+        "citations": []
+      }
+    }
+  }
+}

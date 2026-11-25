@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - CI on GitHub Actions: lint, format check, tests on Node.js 22 and 24, Docker image build and smoke test.
 - Dockerfile and Compose service.
 - Architecture guide, API reference, ADR 0001, contributing guide, code of conduct and security policy.
+- Engine interface for ChatGPT and Claude, and a sample engine that reads the scripted Northside Plumbing answer set (5 buyer questions, 10 answers).
+- Scan lifecycle as pure functions (queued, running, done, failed, cancelled, with retry) and answer progress counting.
+- Answer extractor: finds the client and competitors with offsets, reads citations, reports position and the Cited, Mentioned or Not mentioned label.
 
 ## [0.1.0] - 2026-11-17
 
