@@ -41,7 +41,7 @@ Xaeo is under active development. This list tracks what is in `main`:
 
 - [x] HTTP server with routing, input validation, a consistent JSON error format and a health check
 - [x] CI: lint, formatting, tests on Node.js 22 and 24, Docker image build and smoke test
-- [ ] Database layer and accounts (sign up, log in, sessions, user and admin roles)
+- [x] Database layer and accounts (sign up, log in, sessions, user and admin roles)
 - [ ] Agency web app: clients, buyer questions, scans and answers
 - [ ] Fixes, approvals and the Xo assistant
 - [ ] White-label client reports
@@ -106,12 +106,14 @@ The container runs as a non-root user and reports its health through `/api/healt
 
 Configuration comes from environment variables, validated at start-up; the server refuses to start and lists every invalid value. Copy `.env.example` to `.env` for local development.
 
-| Variable    | Default       | Description                                       |
-| ----------- | ------------- | ------------------------------------------------- |
-| `NODE_ENV`  | `development` | `development`, `test` or `production`             |
-| `HOST`      | `127.0.0.1`   | Interface to bind (`0.0.0.0` in the Docker image) |
-| `PORT`      | `3000`        | Port to listen on                                 |
-| `LOG_LEVEL` | `info`        | `debug`, `info`, `warn`, `error` or `silent`      |
+| Variable           | Default        | Description                                                                              |
+| ------------------ | -------------- | ---------------------------------------------------------------------------------------- |
+| `NODE_ENV`         | `development`  | `development`, `test` or `production`                                                    |
+| `HOST`             | `127.0.0.1`    | Interface to bind (`0.0.0.0` in the Docker image)                                        |
+| `PORT`             | `3000`         | Port to listen on                                                                        |
+| `LOG_LEVEL`        | `info`         | `debug`, `info`, `warn`, `error` or `silent`                                             |
+| `DATABASE_PATH`    | `data/xaeo.db` | SQLite file, created on first start; `:memory:` in tests (`/app/data/xaeo.db` in Docker) |
+| `SESSION_TTL_DAYS` | `14`           | How long a sign-in lasts, 1 to 90 days                                                   |
 
 ## Testing
 
