@@ -1,0 +1,26 @@
+:root {
+  /* Radii - everything rounded, 14–20px on cards and buttons */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-pill: 999px;
+  --radius-button: var(--radius-md);
+  --radius-input: var(--radius-md);
+  --radius-card: var(--radius-xl);
+  --radius-tag: var(--radius-pill);
+
+  --border-w: 2px;
+  /* Shadows - flat offset, pale blue. No blur, no glow */
+  --edge-depth: 4px;
+  --shadow-button-primary: 0 4px 0 var(--cobalt-deep);
+  --shadow-button-secondary: 0 4px 0 var(--pale-blue);
+  --shadow-card: 0 4px 0 var(--pale-blue);
+  --shadow-card-lift: 0 8px 0 var(--pale-blue);
+  --shadow-card-flat: 0 2px 0 var(--pale-blue); /* static panels: lift means clickable */
+  --shadow-pop: 0 6px 0 var(--pale-blue);
+  --shadow-on-brand: 0 6px 0 var(--cobalt-deep);
+  --scrim: rgba(10, 15, 51, 0.45);
+}
