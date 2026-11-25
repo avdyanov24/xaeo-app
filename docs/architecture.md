@@ -6,11 +6,17 @@ Xaeo is a single Node.js process that serves a JSON API under `/api`. It uses ES
 
 1. `src/server/index.js` loads configuration, creates the logger and starts `node:http`.
 2. `src/server/app.js` handles every request: it assigns an `X-Request-Id`, sets security headers and asks the router for a handler.
-3. `src/server/http/router.js` matches the method and path (`/api/clients/:id` style patterns). An unknown path is a 404; a known path with the wrong method is a 405 with an `Allow` header.
+3. `src/server/http/router.js` matches the method and path (`/api/clients/:id` style patterns). An unknown path is a 404; a known path with the wrong method is a 405 with an `Allow` header. A `GET` or `HEAD` that matches no route and is not under `/api` falls through to the static files (see below).
 4. The route handler validates its input and calls a service.
 5. The handler's return value is sent as JSON with `Cache-Control: no-store`. Returning `{ status, body }` sets the status; returning nothing sends 204.
 6. Any thrown `HttpError` becomes the JSON error envelope. Anything else is logged with its stack and the request id, and the client gets a generic 500.
 7. One structured log line is written per request with the method, path, status and duration.
+
+## Web app and static files
+
+The browser UI is plain HTML, CSS and JavaScript in `src/web`, with no build step. `src/server/http/static.js` serves it: it maps a URL path to a file below `src/web`, sets the content type from the extension, adds an `ETag` and a cache policy (HTML always revalidates, other files cache for five minutes) and answers `HEAD` and conditional requests. A path is refused with a 404 when any segment starts with a dot, when it contains an encoded separator, backslash or NUL byte, or when the real path of the file (after following symlinks) is outside `src/web`.
+
+`src/server/routes/pages.js` adds the clean page URLs: `/` redirects to `/app`, and `/app`, `/login` and `/signup` serve their HTML file. The UI keeps all HTTP calls in `src/web/ui/js/lib.js` and each screen in `src/web/ui/js/views/`; it knows nothing about the server's layers beyond the JSON routes in [api.md](api.md).
 
 ## Layers
 

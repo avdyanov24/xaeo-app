@@ -34,3 +34,33 @@ Content-Type: application/json; charset=utf-8
 
 { "status": "ok", "version": "0.1.0", "uptimeSeconds": 42 }
 ```
+
+## Pages and static files
+
+These routes return HTML and files rather than JSON. Errors on them still use the JSON error envelope.
+
+### `GET /`
+
+Redirects (`302`) to `/app`. The response is `Cache-Control: no-store`.
+
+### `GET /app`
+
+The agency web app: serves `src/web/app.html`. The page is `Cache-Control: no-cache`, so a new version shows on the next navigation.
+
+### `GET /login`, `GET /signup`
+
+Serve `login.html` and `signup.html` from `src/web` when those pages exist, and `404` otherwise.
+
+### `GET /<path>` for files in `src/web`
+
+Any other `GET` or `HEAD` request outside `/api` is looked up in `src/web`, so `/ui/js/main.js`, `/ds/tokens/colors.css` and `/assets/wordmark-48.webp` are the files at the same path in that folder.
+
+| Behaviour    | Detail                                                                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Content type | From the file extension (`html`, `css`, `js`, `json`, `svg`, `png`, `webp`, `woff2`, ...).                                                                                                                          |
+| Caching      | `.html` is `no-cache`; every other file is `public, max-age=300`.                                                                                                                                                   |
+| Validators   | A weak `ETag` and `Last-Modified`. A matching `If-None-Match` returns `304`.                                                                                                                                        |
+| `HEAD`       | Same headers, no body.                                                                                                                                                                                              |
+| Not served   | Directories, dotfiles (any path segment starting with `.`), and anything that resolves outside `src/web`, including through encoded `..`, encoded slashes, backslashes, NUL bytes and symlinks. These return `404`. |
+
+Other methods on a file path return `404`, and on a page route `405` with `Allow: GET`.

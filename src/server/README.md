@@ -3,7 +3,7 @@
 Plain Node.js HTTP server, no framework. Requests flow one way:
 
 ```
-http/      router, JSON body parsing, response helpers
+http/      router, JSON body parsing, response helpers, static file handler
 routes/    HTTP only: read params and body, validate, call a service, return the result
 services/  business logic; never sees req or res
 repositories/  SQL only
