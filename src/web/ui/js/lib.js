@@ -50,6 +50,9 @@ export async function api(path, { method = 'GET', data, raw, type } = {}) {
       code: 'session_changed',
     });
   if (!response.ok) {
+    // The API's error envelope is { error: { code, message } }.
+    const error = body?.error && typeof body.error === 'object' ? body.error : null;
+    body = error ? { ...body, error: error.message, code: error.code } : body;
     const server = response.status >= 500 || !body?.error;
     const retryAfter =
       Math.min(Math.max(parseInt(response.headers.get('retry-after'), 10) || 0, 0), 300) || null;
