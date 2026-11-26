@@ -32,7 +32,7 @@ describe('seed data', () => {
   it('changes nothing when run again', async () => {
     const db = openDatabase(':memory:');
     await runSeeds(db);
-    assert.deepEqual(await runSeeds(db), { accounts: [] });
+    assert.deepEqual(await runSeeds(db), { accounts: [], northside: [] });
     assert.equal(db.prepare('SELECT count(*) AS n FROM users').get().n, 2);
     assert.equal(db.prepare('SELECT count(*) AS n FROM workspaces').get().n, 1);
   });

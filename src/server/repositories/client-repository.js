@@ -110,3 +110,15 @@ export function setArchivedAt(db, workspaceId, id, archivedAt) {
     .run(archivedAt, workspaceId, id);
   return result.changes > 0;
 }
+
+/**
+ * The workspace's example client, archived or not. A workspace has at most one.
+ * @returns {ClientRow | undefined}
+ */
+export function findSampleClient(db, workspaceId) {
+  return toClient(
+    db
+      .prepare(`SELECT ${COLUMNS} FROM clients WHERE workspace_id = ? AND sample = 1 LIMIT 1`)
+      .get(workspaceId),
+  );
+}
