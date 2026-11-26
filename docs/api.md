@@ -203,6 +203,30 @@ Brings an archived client back. The weekly rescan stays off until it is switched
 
 Adds the Northside Plumbing example client with its five questions and a finished first scan (named in 2 of 10 answers). A workspace has one: calling this again returns its id with `200`. Responds `201` with `{ "id" }` when it was added.
 
+### `GET /api/app/stats` (signed in)
+
+The agency-wide numbers above the clients list, counted from each active client's latest finished scan. The sample client is left out, so with only the sample client `scanned` is `false` and the web app hides the block.
+
+```json
+{
+  "scanned": true,
+  "totals": { "ok": 10, "mentioned": 2, "cited": 1, "doneFixes": 0, "openFixes": 0 },
+  "previous": null,
+  "byEngine": [
+    { "id": "chatgpt", "name": "ChatGPT", "ok": 5, "mentioned": 0 },
+    { "id": "claude", "name": "Claude", "ok": 5, "mentioned": 2 }
+  ],
+  "weeks": [{ "start": "2026-11-23T00:00:00.000Z", "ok": 10, "mentioned": 2, "fixesDone": 0 }],
+  "sampleExcluded": true,
+  "weeklyAggregation": { "description": "..." },
+  "nextRescan": "2026-12-03T10:00:00.000Z",
+  "nextRescanCount": 1,
+  "rescansPaused": false
+}
+```
+
+`previous` is the same totals for the scan before each client's latest, and only when every client has one; otherwise `null`. `weeks` runs from the week of the first scan (at most the last 8 weeks, Monday starts, UTC) to the current week, each week adding up every client's latest scan to that point; it is a description, not a controlled comparison. `nextRescan` is the soonest weekly rescan and `nextRescanCount` how many clients fall on that day. `doneFixes`, `openFixes` and `fixesDone` stay `0` until fixes exist.
+
 ### `GET /api/app/engines` (signed in)
 
 The engines scans ask, and where their answers come from. Xaeo asks ChatGPT and Claude only. Every engine is in the `sample` state because answers come from a scripted sample set, which the engines view shows as such.

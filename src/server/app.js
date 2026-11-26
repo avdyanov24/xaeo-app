@@ -11,6 +11,7 @@ import { registerRoutes } from './routes/index.js';
 import { createAnswerService } from './services/answer-service.js';
 import { createAuthService } from './services/auth-service.js';
 import { createClientService } from './services/client-service.js';
+import { createStatsService } from './services/stats-service.js';
 import { createSampleEngines } from './services/engines/sample-engine.js';
 import { loadAnswerSet } from './services/engines/sample-answers.js';
 import { createScanRunner } from './services/scans/scan-runner.js';
@@ -40,6 +41,7 @@ export function createApp({
   const sessionHttp = createSessionHttp({ auth, config });
   const clientService = createClientService({ db });
   const answerService = createAnswerService({ db });
+  const statsService = createStatsService({ db });
   const answerSet = loadAnswerSet();
   const scanRunner = createScanRunner({
     db,
@@ -65,6 +67,7 @@ export function createApp({
     sessionHttp,
     clientService,
     answerService,
+    statsService,
     scanRunner,
     loginLimiter,
     staticFiles,
