@@ -113,7 +113,7 @@ Ends the current session and clears the cookie. `204`, also when there was no se
 
 ### `GET /api/app/me` (signed in)
 
-Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`.
+Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`. `xo` is `true`: the web app shows Xo's panel and the Approvals page only when it is set.
 
 ```json
 {
@@ -129,6 +129,7 @@ Everything the web app needs to start: the user with their role in the workspace
     { "id": "chatgpt", "name": "ChatGPT" },
     { "id": "claude", "name": "Claude" }
   ],
+  "xo": true,
   "engineStatus": {
     "mode": "sample",
     "engines": [

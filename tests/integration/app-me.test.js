@@ -32,6 +32,7 @@ describe('GET /api/app/me', () => {
       res.json.engines.map((engine) => engine.name),
       ['ChatGPT', 'Claude'],
     );
+    assert.equal(res.json.xo, true);
     assert.equal(res.json.engineStatus.mode, 'sample');
     assert.ok(res.json.engineStatus.engines.every((engine) => engine.state === 'sample'));
   });
