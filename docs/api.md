@@ -377,3 +377,39 @@ Stops a queued or running scan and keeps the answers already stored. `409` once 
 ### `POST /api/app/scans/:id/retry` (signed in)
 
 Starts a failed or cancelled scan again from the first answer, replacing its stored answers. `409` when the scan cannot be retried or the client already has one in progress. A scan that was running when the server restarted is marked `failed` at start-up and can be retried.
+
+## Xo, the assistant panel
+
+Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.
+
+### `POST /api/app/xo/turn` (signed in)
+
+Sends one message and streams the reply as server-sent events (`text/event-stream`). Body: `{ "text": "...", "conversationId": 4, "uiState": { "clientId": "7" } }`. `text` is 1 to 4000 characters; leave out `conversationId` to start a chat; `uiState.clientId` says which client "this client" means, and otherwise the newest active client is used. The events, in order:
+
+| Event     | Data                        | Meaning                                                    |
+| --------- | --------------------------- | ---------------------------------------------------------- |
+| `start`   | `{ conversationId }`        | The chat the message went to                               |
+| `tool`    | `{ id, label, phase, ok? }` | A step Xo shows as it works; `phase` is `start` then `end` |
+| `text`    | `{ delta }`                 | The next words of the reply                                |
+| `card`    | `{ card }`                  | A scan or draft card to show under the reply               |
+| `ui`      | `{ hash }`                  | A route the app should open, such as `#/clients/7/answers` |
+| `refresh` | `{}`                        | Something changed that the open page should reload         |
+| `done`    | `{ grounding, stopReason }` | The reply is complete                                      |
+
+Errors before the stream starts are normal JSON errors: 422 for a bad body, 404 for a chat that is not yours, 409 `conversation_closed` once a chat holds 40 messages.
+
+### `GET /api/app/xo/conversations` (signed in)
+
+The signed-in person's chats, most recently active first: `{ conversations: [{ id, title, status, updatedAt }] }`. `status` is `open` or `closed`; times are milliseconds since the epoch.
+
+### `GET /api/app/xo/conversations/:id` (signed in)
+
+One chat for the panel to redraw: `{ conversation, messages, cards }`. A card carries the time it was made, so the panel can place it after the reply it belongs to. Another person's chat is a 404.
+
+### `GET /api/app/xo/suggestions` (signed in)
+
+The chips in the empty panel: `{ suggestions: [{ label, message } | { label, hash }] }`. A `message` chip sends that text; a `hash` chip opens that route. Optional query `clientId`.
+
+### `GET /api/app/xo/usage` (signed in)
+
+`{ blocked: null, rateLimit: null }`. Scripted replies have no allowance, so nothing is ever limited; the panel reads this to decide whether to close its composer.

@@ -13,7 +13,14 @@ export async function startTestServer(t, env = {}, appOptions = {}) {
   const config = loadConfig({ NODE_ENV: 'test', PORT: '0', ...env });
   const db = openDatabase(config.databasePath);
   const logger = createLogger({ level: 'silent' });
-  const app = createApp({ config, logger, db, scanStepDelayMs: 0, ...appOptions });
+  const app = createApp({
+    config,
+    logger,
+    db,
+    scanStepDelayMs: 0,
+    xoWordDelayMs: 0,
+    ...appOptions,
+  });
   const server = createServer(app);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   // A scan keeps writing to the database after a cancel until it next checks, so let it stop first.

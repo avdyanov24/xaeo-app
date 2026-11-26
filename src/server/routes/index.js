@@ -7,6 +7,7 @@ import { registerHealthRoutes } from './health.js';
 import { registerPageRoutes } from './pages.js';
 import { registerQuestionRoutes } from './questions.js';
 import { registerScanRoutes } from './scans.js';
+import { registerXoRoutes } from './xo.js';
 
 /** Registers every route module on the router. New route modules are added here. */
 export function registerRoutes(router, deps) {
@@ -18,5 +19,6 @@ export function registerRoutes(router, deps) {
   registerEngineRoutes(router, deps);
   registerQuestionRoutes(router, deps);
   registerScanRoutes(router, deps);
+  registerXoRoutes(router, deps);
   registerPageRoutes(router, deps);
 }
