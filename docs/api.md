@@ -413,3 +413,27 @@ The chips in the empty panel: `{ suggestions: [{ label, message } | { label, has
 ### `GET /api/app/xo/usage` (signed in)
 
 `{ blocked: null, rateLimit: null }`. Scripted replies have no allowance, so nothing is ever limited; the panel reads this to decide whether to close its composer.
+
+### `GET /api/app/xo/approvals` (signed in)
+
+The approvals queue: `{ approvals, pendingCount, client }`. Query `status` is `pending` (default), `approved`, `rejected`, `stale` or `all`; `clientId` narrows to one client and fills `client`. Each approval is `{ id, artifactId, status, kind, title, requestedAt, clientName, card }`, newest first; an edited draft has an older `stale` request next to its current one. `pendingCount` counts the whole workspace, whatever the filter.
+
+### `POST /api/app/xo/approvals/:id/decide` (signed in, workspace owner)
+
+Approves or rejects one request. Body: `{ "decision": "approve" | "reject", "contentHash": "<sha-256 of the reviewed content>" }`. Answers `{ card }`. `403` for a member, `404` for a request in another workspace, `409 stale_approval` when the request was already decided, the draft was edited, or the hash does not match what is stored, and `409 approve_blocked` when approval is not possible yet (placeholders left, invalid JSON, Xaeo or Xo branding in the code).
+
+### `GET /api/app/xo/artifacts/:id` (signed in)
+
+One draft for the drawer: `{ card, versions, audit }`. `versions` lists each saved version with its content hash; `audit` is the history of who drafted, edited, approved or exported which version, oldest first.
+
+### `POST /api/app/xo/artifacts/:id/edit` (signed in)
+
+Saves a new version. Body: `{ "version": 1, "title": "...", "code": "...", "fill": { "FILL_IN_PHONE": "..." } }`; only `version` is required and it must be the current one (`409 stale_approval` otherwise). `fill` replaces placeholders, escaped for JSON drafts. Answers `{ card, artifact: { version }, staleApprovalIds }`: the earlier open requests go stale and a new one is opened. An edit that changes nothing saves nothing.
+
+### `POST /api/app/xo/artifacts/:id/apply` (signed in)
+
+Marks an approved draft as exported. Body: `{ "approvalId": 12 }`, which must be the approved request for the current version (`409 stale_approval` otherwise). Safe to repeat. Answers `{ card, downloadPath }`. Xaeo does not change the client's site; the person copies or downloads the code and ships it.
+
+### `GET /api/app/xo/artifacts/:id/download` (signed in)
+
+The approved draft as a file attachment, named after the client's domain (`llms.txt` for an llms.txt draft). `400` until the draft is approved.
