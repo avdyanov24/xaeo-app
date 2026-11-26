@@ -45,15 +45,15 @@ These routes return HTML and files rather than JSON. Errors on them still use th
 
 ### `GET /`
 
-Redirects (`302`) to `/app`. The response is `Cache-Control: no-store`.
+Redirects (`302`) to `/app` when signed in, otherwise to `/login`. Redirects are `Cache-Control: no-store`.
 
 ### `GET /app`
 
-The agency web app: serves `src/web/app.html`. The page is `Cache-Control: no-cache`, so a new version shows on the next navigation.
+The agency web app: serves `src/web/app.html` to a signed-in user. The page is `Cache-Control: no-cache`, so a new version shows on the next navigation. Without a session it redirects to `/login?next=%2Fapp`, and the login page returns there afterwards.
 
 ### `GET /login`, `GET /signup`
 
-Serve `login.html` and `signup.html` from `src/web` when those pages exist, and `404` otherwise.
+Serve `login.html` and `signup.html` from `src/web`. A signed-in user is redirected to `/app` instead.
 
 ### `GET /<path>` for files in `src/web`
 
