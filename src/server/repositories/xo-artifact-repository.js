@@ -100,10 +100,11 @@ export function setArtifactState(db, workspaceId, id, state) {
 }
 
 /**
- * Saves new content as the next version and puts the draft back to `pending`.
+ * Saves new content (and optionally a new title) as the next version and puts the draft back to
+ * `pending`.
  * @returns {number} the new version number
  */
-export function addVersion(db, workspaceId, id, { code, contentHash }) {
+export function addVersion(db, workspaceId, id, { code, contentHash, title }) {
   const { version } = db
     .prepare('SELECT version FROM xo_artifacts WHERE workspace_id = ? AND id = ?')
     .get(workspaceId, id);
@@ -112,10 +113,10 @@ export function addVersion(db, workspaceId, id, { code, contentHash }) {
     'INSERT INTO xo_artifact_versions (artifact_id, version, code, content_hash) VALUES (?, ?, ?, ?)',
   ).run(id, next, code, contentHash);
   db.prepare(
-    `UPDATE xo_artifacts SET code = ?, version = ?, state = 'pending',
+    `UPDATE xo_artifacts SET code = ?, version = ?, state = 'pending', title = coalesce(?, title),
        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
      WHERE workspace_id = ? AND id = ?`,
-  ).run(code, next, workspaceId, id);
+  ).run(code, next, title ?? null, workspaceId, id);
   return next;
 }
 

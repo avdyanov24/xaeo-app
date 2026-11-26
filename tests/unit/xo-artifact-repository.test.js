@@ -74,6 +74,15 @@ describe('xo artifact repository', () => {
     );
   });
 
+  it('can give a new version a new title, and keeps the old one otherwise', () => {
+    const db = setup();
+    const id = artifacts.insertArtifact(db, DRAFT);
+    artifacts.addVersion(db, 1, id, { code: '# Two', contentHash: 'h2' });
+    assert.equal(artifacts.findArtifact(db, 1, id).title, DRAFT.title);
+    artifacts.addVersion(db, 1, id, { code: '# Three', contentHash: 'h3', title: 'Renamed' });
+    assert.equal(artifacts.findArtifact(db, 1, id).title, 'Renamed');
+  });
+
   it('keeps the history in the order things happened', () => {
     const db = setup();
     const id = artifacts.insertArtifact(db, DRAFT);
