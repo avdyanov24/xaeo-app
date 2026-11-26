@@ -118,3 +118,28 @@ export function scanTotals(db, workspaceId, scanId) {
 export function deleteAnswers(db, workspaceId, scanId) {
   db.prepare('DELETE FROM answers WHERE workspace_id = ? AND scan_id = ?').run(workspaceId, scanId);
 }
+
+/**
+ * Per-engine totals of every finished scan of the workspace's active, non-sample clients, in one
+ * query, so the agency-wide numbers do not cost a query per scan. A scan with no answers has no row.
+ * @returns {{ scanId: number, clientId: number, number: number, finishedAt: string, engine: string, ok: number, mentioned: number, cited: number }[]}
+ */
+export function listEngineTotals(db, workspaceId) {
+  return db
+    .prepare(
+      `SELECT s.id AS scanId, s.client_id AS clientId, s.number, s.finished_at AS finishedAt,
+              a.engine,
+              coalesce(sum(a.status = 'ok'), 0) AS ok,
+              coalesce(sum(a.status = 'ok' AND a.mentioned = 1), 0) AS mentioned,
+              coalesce(sum(a.status = 'ok' AND a.label = 'Cited'), 0) AS cited
+       FROM scans s
+       JOIN clients c ON c.id = s.client_id AND c.workspace_id = s.workspace_id
+       JOIN answers a ON a.scan_id = s.id AND a.workspace_id = s.workspace_id
+       WHERE s.workspace_id = ? AND s.state = 'done'
+         AND c.archived_at IS NULL AND c.sample = 0
+       GROUP BY s.id, a.engine
+       ORDER BY s.client_id, s.number, a.engine`,
+    )
+    .all(workspaceId)
+    .map((row) => ({ ...row }));
+}
