@@ -28,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Architecture guide, API reference, ADR 0001 and ADR 0002, contributing guide, code of conduct and security policy.
 - Engine interface for ChatGPT and Claude, and a sample engine that reads the scripted Northside Plumbing answer set (5 buyer questions, 10 answers).
 - Scan lifecycle as pure functions (queued, running, done, failed, cancelled, with retry) and answer progress counting.
+- Xo, the assistant panel: `POST /api/app/xo/turn` streams a scripted reply as server-sent events, with chats, suggestions and usage routes. Replies come from a scripted reply set matched by keyword and filled in from the workspace's own numbers.
+- Drafts Xo prepares from a client record (LocalBusiness JSON-LD and an llms.txt) with `FILL_IN_` placeholders for facts it cannot know, and the approvals queue: approve or reject by content hash (owners only), edit as a new version, export once, and download the file.
+- Migration `003_xo.sql`: conversations, messages, drafts with versions and history, approvals and chat cards.
+- `GET /api/app/me` returns `xo: true`, which switches on the Ask Xo panel and the Approvals page.
+- Xo animation clips and poses (`assets/xo-app`, `assets/xo-morph-v1`), left out of Prettier because they are generated data.
 - Answer extractor: finds the client and competitors with offsets, reads citations, reports position and the Cited, Mentioned or Not mentioned label.
 - Clients, buyer questions, scans and answers: `002_clients_scans.sql`, the repositories behind it, and the Northside Plumbing sample client and its first scan in the seed.
 - Routes for clients (list, create, edit, archive, the sample client), questions, scans (start, poll, cancel, retry), answers, `GET /api/app/engines` and `GET /api/app/stats`, all scoped to the signed-in workspace.
