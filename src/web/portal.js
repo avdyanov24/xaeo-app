@@ -165,3 +165,60 @@ if (page === 'signup') {
     }
   });
 }
+
+// Required and format checks use the designed inline error (the field's edge and the form's status line), not the
+// browser's bubble. One capture-phase gate runs before each page's own submit handler and stops it when a field fails.
+function fieldProblem(input) {
+  const label = (
+    document.querySelector(`label[for="${input.id}"]`)?.textContent || 'this field'
+  ).trim();
+  const name = label.toLowerCase().replace(/^your /, '');
+  const validity = input.validity;
+  const confirm = /^confirm /.test(name);
+  if (validity.valueMissing) {
+    if (confirm) return `Confirm your ${name.slice(8)}.`;
+    if (input.autocomplete === 'new-password') return 'Choose a password.';
+    return `Enter your ${name}.`;
+  }
+  if (validity.typeMismatch && input.type === 'email')
+    return 'Enter a full email address, like name@agency.com.';
+  if (validity.tooShort)
+    return confirm
+      ? 'Type the same password again to confirm it.'
+      : `${label} needs at least ${input.minLength} characters.`;
+  return input.validationMessage;
+}
+
+document.querySelectorAll('form').forEach((form) => {
+  form.noValidate = true;
+  form.addEventListener('input', (event) => {
+    if (event.target.dataset.gate) {
+      event.target.removeAttribute('aria-invalid');
+      delete event.target.dataset.gate;
+    }
+  });
+});
+
+document.addEventListener(
+  'submit',
+  (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    form.querySelectorAll('[data-gate]').forEach((el) => {
+      el.removeAttribute('aria-invalid');
+      delete el.dataset.gate;
+    });
+    const invalid = [...form.elements].filter((el) => el.willValidate && !el.checkValidity());
+    if (!invalid.length) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    invalid.forEach((el) => {
+      el.setAttribute('aria-invalid', 'true');
+      el.dataset.gate = '1';
+    });
+    const status = form.querySelector('.form-message[id]');
+    if (status) showMessage(status.id, fieldProblem(invalid[0]));
+    invalid[0].focus();
+  },
+  true,
+);
