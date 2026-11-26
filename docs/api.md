@@ -177,7 +177,7 @@ The workspace's clients, newest first. `?archived=1` lists archived clients inst
 
 ### `POST /api/app/clients` (signed in)
 
-Adds a client. Body: `name`, `domain` (a bare host or a pasted address, stored as a bare host), optional `type`, `city`, `country` (two letters), and `questions` as `[{ "text", "intent" }]` with intent one of `find`, `compare`, `urgent`, `trust`. The weekly rescan starts on, due in a week. Responds `201` with `{ "id" }`; `422` with the list of invalid fields otherwise.
+Adds a client. Body: `name`, `domain` (a bare host or a pasted address, stored as a bare host), optional `type`, `city`, `country` (two letters), `questions` as `[{ "text", "intent" }]` with intent one of `find`, `compare`, `urgent`, `trust`, and `scan` (true to start the first scan now). The weekly rescan starts on, due in a week. Responds `201` with `{ "id" }`, plus `scanNote` when a scan was asked for but could not start (for example no questions); `422` with the list of invalid fields otherwise.
 
 ### `GET /api/app/clients/:id` (signed in)
 
@@ -226,3 +226,39 @@ Removes the question from the list; past answers keep it. Responds with the clie
 ### `DELETE /api/app/questions/:id` (signed in)
 
 Same as `POST /api/app/questions/:id/delete`.
+
+### `POST /api/app/clients/:id/scans` (signed in)
+
+Starts a scan: every switched-on question asked of every engine, one answer at a time, in this process (no job queue). Responds `201` with the scan in state `queued`:
+
+```json
+{
+  "id": 2,
+  "clientId": 1,
+  "number": 2,
+  "state": "queued",
+  "total": 10,
+  "completed": 0,
+  "error": null,
+  "createdAt": "2026-11-26T10:00:00.000Z",
+  "startedAt": null,
+  "finishedAt": null,
+  "ok": 0,
+  "mentioned": 0,
+  "failed": 0
+}
+```
+
+States are `queued`, `running`, `done`, `failed` and `cancelled`. `409` when the client is archived or already has a scan in progress; `400` when no question is switched on.
+
+### `GET /api/app/scans/:id` (signed in)
+
+The scan in the shape above. The web app polls it while the scan runs: `completed` out of `total` is the progress, and `ok`, `mentioned` and `failed` count the answers stored so far.
+
+### `POST /api/app/scans/:id/cancel` (signed in)
+
+Stops a queued or running scan and keeps the answers already stored. `409` once it has finished.
+
+### `POST /api/app/scans/:id/retry` (signed in)
+
+Starts a failed or cancelled scan again from the first answer, replacing its stored answers. `409` when the scan cannot be retried or the client already has one in progress. A scan that was running when the server restarted is marked `failed` at start-up and can be retried.

@@ -1,5 +1,5 @@
 import { readJson } from '../http/body.js';
-import { notFound } from '../lib/errors.js';
+import { HttpError, notFound } from '../lib/errors.js';
 import { validate } from '../lib/validate.js';
 import { INTENTS } from '../repositories/question-repository.js';
 import { addSampleClient } from '../services/sample-client.js';
@@ -15,6 +15,7 @@ const DETAILS = {
 const CREATE = {
   ...DETAILS,
   questions: { type: 'raw' },
+  scan: { type: 'boolean' },
 };
 
 // Every field is optional on update; only the ones sent change.
@@ -37,7 +38,7 @@ export function idParam(params, name = 'id') {
 }
 
 /** Clients, the archive and the example client. */
-export function registerClientRoutes(router, { sessionHttp, clientService, db }) {
+export function registerClientRoutes(router, { sessionHttp, clientService, scanRunner, db }) {
   const route = (handler) =>
     sessionHttp.requireUser((ctx) => handler(ctx, ctx.session.workspace.id));
 
@@ -55,8 +56,19 @@ export function registerClientRoutes(router, { sessionHttp, clientService, db })
       const starters = (Array.isArray(input.questions) ? input.questions : [])
         .slice(0, 50)
         .map((question) => validate(STARTER_QUESTION, question));
-      const { id } = clientService.create(workspaceId, { ...input, questions: starters });
-      return { status: 201, body: { id } };
+      const { scan, ...details } = input;
+      const { id } = clientService.create(workspaceId, { ...details, questions: starters });
+      const body = { id };
+      if (scan) {
+        // The client is saved either way; a scan that cannot start says why instead of failing the request.
+        try {
+          scanRunner.startScan(workspaceId, id);
+        } catch (error) {
+          if (!(error instanceof HttpError)) throw error;
+          body.scanNote = error.message;
+        }
+      }
+      return { status: 201, body };
     }),
   );
 
