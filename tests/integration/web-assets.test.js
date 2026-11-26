@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
-import { dirname, posix } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { dirname, join, posix } from 'node:path';
 import { describe, it } from 'node:test';
 import { startTestServer } from '../helpers/server.js';
 
@@ -55,6 +55,28 @@ describe('web assets', () => {
     ])
       assert.ok(assets.includes(expected), `the walk did not reach ${expected}`);
     for (const url of assets) {
+      const res = await request('GET', url);
+      assert.equal(res.status, 200, `${url} returned ${res.status}`);
+    }
+  });
+
+  it('serves the files that scripts load by a quoted absolute URL', async (t) => {
+    // `import()` and injected <script> tags never appear as a static import, so the walk above misses
+    // them. Quoted /assets, /ui and /ds file URLs in the browser code cover those.
+    const { request } = await startTestServer(t);
+    const urls = new Set();
+    const files = await readdir(new URL('ui/js/', WEB_ROOT), {
+      recursive: true,
+      withFileTypes: true,
+    });
+    for (const file of files) {
+      if (!file.isFile() || !file.name.endsWith('.js')) continue;
+      const source = await readFile(join(file.parentPath, file.name), 'utf8');
+      for (const m of source.matchAll(/'(\/(?:assets|ui|ds)\/[^'?#]*\.[a-z0-9]+)'/g))
+        urls.add(m[1]);
+    }
+    assert.ok(urls.has('/assets/xo-morph-v1/xo-morph.js'), 'the Xo renderer URL was not found');
+    for (const url of urls) {
       const res = await request('GET', url);
       assert.equal(res.status, 200, `${url} returned ${res.status}`);
     }
