@@ -62,42 +62,41 @@ export function createArtifactService({ db }) {
 
     /**
      * Prepares a draft for a client from its record and asks for approval. Xo is the author.
+     * Writes several rows, so it runs inside the caller's transaction (the chat turn's).
      * @param {'jsonld' | 'llms_txt'} draftName
      * @returns {number} the draft's id
      */
     createDraft(session, client, draftName) {
       const workspaceId = session.workspace.id;
       const draft = DRAFTS[draftName](client);
-      return transaction(db, () => {
-        const hash = contentHash(draft.code);
-        const id = artifacts.insertArtifact(db, {
-          ...draft,
-          workspaceId,
-          clientId: client.id,
-          contentHash: hash,
-        });
-        approvals.insertApproval(db, {
-          workspaceId,
-          artifactId: id,
-          version: 1,
-          contentHash: hash,
-        });
-        artifacts.insertEvent(db, {
-          workspaceId,
-          artifactId: id,
-          action: 'artifact_created',
-          version: 1,
-          actorType: 'xo',
-        });
-        artifacts.insertEvent(db, {
-          workspaceId,
-          artifactId: id,
-          action: 'approval_requested',
-          version: 1,
-          actorType: 'xo',
-        });
-        return id;
+      const hash = contentHash(draft.code);
+      const id = artifacts.insertArtifact(db, {
+        ...draft,
+        workspaceId,
+        clientId: client.id,
+        contentHash: hash,
       });
+      approvals.insertApproval(db, {
+        workspaceId,
+        artifactId: id,
+        version: 1,
+        contentHash: hash,
+      });
+      artifacts.insertEvent(db, {
+        workspaceId,
+        artifactId: id,
+        action: 'artifact_created',
+        version: 1,
+        actorType: 'xo',
+      });
+      artifacts.insertEvent(db, {
+        workspaceId,
+        artifactId: id,
+        action: 'approval_requested',
+        version: 1,
+        actorType: 'xo',
+      });
+      return id;
     },
 
     /** One draft with its versions and history, for the drawer. */
