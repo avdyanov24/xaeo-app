@@ -11,6 +11,9 @@
  * @property {number} position
  */
 
+/** What a buyer is trying to do when they ask. The migration's CHECK constraint lists the same four. */
+export const INTENTS = Object.freeze(['find', 'compare', 'urgent', 'trust']);
+
 const COLUMNS = 'id, client_id AS clientId, text, intent, active, position';
 
 const toQuestion = (row) => row && { ...row, active: row.active === 1 };

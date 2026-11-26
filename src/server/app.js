@@ -9,6 +9,7 @@ import { HttpError, notFound } from './lib/errors.js';
 import { createFailureLimiter } from './lib/rate-limit.js';
 import { registerRoutes } from './routes/index.js';
 import { createAuthService } from './services/auth-service.js';
+import { createClientService } from './services/client-service.js';
 
 const { version } = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
@@ -25,6 +26,7 @@ const DEFAULT_WEB_ROOT = fileURLToPath(new URL('../web', import.meta.url));
 export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
   const auth = createAuthService({ db, sessionTtlMs: config.sessionTtlMs });
   const sessionHttp = createSessionHttp({ auth, config });
+  const clientService = createClientService({ db });
   // Five wrong passwords per address and email, then a 15-minute wait.
   const loginLimiter = createFailureLimiter({ limit: 5, windowMs: 15 * 60 * 1000 });
   const router = createRouter();
@@ -34,8 +36,10 @@ export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
     logger,
     version,
     startedAt: Date.now(),
+    db,
     auth,
     sessionHttp,
+    clientService,
     loginLimiter,
     staticFiles,
   });

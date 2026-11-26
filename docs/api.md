@@ -138,3 +138,67 @@ Everything the web app needs to start: the user with their role in the workspace
   }
 }
 ```
+
+### `GET /api/app/clients` (signed in)
+
+The workspace's clients, newest first. `?archived=1` lists archived clients instead. `archivedCount` is always the number of archived clients, so the app can show the link to them.
+
+```json
+{
+  "clients": [
+    {
+      "id": 1,
+      "name": "Northside Plumbing",
+      "domain": "northsideplumbing.co.uk",
+      "type": "Plumber",
+      "city": "Leeds",
+      "country": "GB",
+      "sample": true,
+      "status": "active",
+      "weekly": true,
+      "nextRunAt": "2026-12-03T10:00:00.000Z",
+      "questions": 5,
+      "runningId": null,
+      "latest": {
+        "id": 1,
+        "number": 1,
+        "finishedAt": "2026-11-26T10:00:00.000Z",
+        "ok": 10,
+        "mentioned": 2,
+        "failed": 0
+      }
+    }
+  ],
+  "archivedCount": 0
+}
+```
+
+`latest` is the newest finished scan, or `null`. `runningId` is the id of the scan in progress, or `null`.
+
+### `POST /api/app/clients` (signed in)
+
+Adds a client. Body: `name`, `domain` (a bare host or a pasted address, stored as a bare host), optional `type`, `city`, `country` (two letters), and `questions` as `[{ "text", "intent" }]` with intent one of `find`, `compare`, `urgent`, `trust`. The weekly rescan starts on, due in a week. Responds `201` with `{ "id" }`; `422` with the list of invalid fields otherwise.
+
+### `GET /api/app/clients/:id` (signed in)
+
+One client in the shape above, plus `running`, the scan in progress or `null`. `404` for a client in another workspace.
+
+### `POST /api/app/clients/:id` (signed in)
+
+Changes the fields sent: `name`, `domain`, `type`, `city`, `country`, and `weekly` (switches the weekly rescan on or off; ignored for an archived client). Responds with the client as `GET` returns it. `PATCH` does the same.
+
+### `PATCH /api/app/clients/:id` (signed in)
+
+Same as `POST /api/app/clients/:id`.
+
+### `POST /api/app/clients/:id/archive` (signed in)
+
+Hides the client from the list and turns its weekly rescan off. Responds `204`.
+
+### `POST /api/app/clients/:id/unarchive` (signed in)
+
+Brings an archived client back. The weekly rescan stays off until it is switched on again. Responds `204`.
+
+### `POST /api/app/sample` (signed in)
+
+Adds the Northside Plumbing example client with its five questions and a finished first scan (named in 2 of 10 answers). A workspace has one: calling this again returns its id with `200`. Responds `201` with `{ "id" }` when it was added.
