@@ -116,3 +116,52 @@ if (page === 'login') {
     }
   });
 }
+
+// Which input each API field belongs to, so a 422 marks the right one.
+const SIGNUP_FIELDS = {
+  name: 'name',
+  workspaceName: 'agency-name',
+  email: 'work-email',
+  password: 'signup-password',
+};
+
+if (page === 'signup') {
+  const form = document.getElementById('signup-form');
+  bindPasswordToggle();
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    showMessage('signup-message', '', 'normal');
+    form
+      .querySelectorAll('[aria-invalid]')
+      .forEach((input) => input.removeAttribute('aria-invalid'));
+    const password = form.elements.namedItem('password');
+    const confirm = form.elements.namedItem('confirmPassword');
+    if (password.value !== confirm.value) {
+      confirm.setAttribute('aria-invalid', 'true');
+      showMessage('signup-message', 'Passwords do not match.');
+      confirm.focus();
+      return;
+    }
+    busy(form, true);
+    try {
+      const values = fieldValues(form);
+      delete values.confirmPassword;
+      await api('/api/signup', { method: 'POST', body: JSON.stringify(values) });
+      location.assign('/app');
+    } catch (error) {
+      const inputs = error.issues
+        .map((issue) => document.getElementById(SIGNUP_FIELDS[issue.field]))
+        .filter(Boolean);
+      inputs.forEach((input) => input.setAttribute('aria-invalid', 'true'));
+      const text =
+        error.status === 409
+          ? 'An account with this email already exists. Log in instead.'
+          : error.issues.length
+            ? `${document.querySelector(`label[for="${inputs[0]?.id}"]`)?.textContent ?? 'A field'} ${error.issues[0].message}.`
+            : error.message;
+      showMessage('signup-message', text);
+      inputs[0]?.focus();
+      busy(form, false);
+    }
+  });
+}

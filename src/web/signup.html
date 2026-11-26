@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create your workspace · Xaeo</title>
+    <meta name="description" content="Create an agency workspace in Xaeo." />
+    <meta name="color-scheme" content="light dark" />
+    <script src="/prefs.js"></script>
+    <link rel="icon" href="/assets/favicon/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/favicon/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/portal.css" />
+    <link rel="stylesheet" href="/ui/portal-glass.css" />
+    <script src="/portal.js" defer></script>
+    <script type="module" src="/ui/js/xo-mount.js"></script>
+  </head>
+  <body data-page="signup" class="account-page auth">
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/login" aria-label="Xaeo"
+          ><img
+            class="wm-light"
+            src="/assets/wordmark-163.webp"
+            srcset="/assets/wordmark-163.webp 1x, /assets/wordmark-326.webp 2x"
+            width="163"
+            height="48"
+            alt="" /><img
+            class="wm-dark"
+            src="/assets/wordmark-white-48.webp"
+            srcset="/assets/wordmark-white-48.webp 1x, /assets/wordmark-white-326.webp 2x"
+            width="163"
+            height="48"
+            alt=""
+        /></a>
+        <nav class="header-links" aria-label="Main"><a href="/login">Log in</a></nav>
+      </div>
+    </header>
+    <main class="mist">
+      <div class="shell page-hero join-layout">
+        <section class="card join-card" aria-labelledby="signup-title">
+          <div class="eyebrow">New agency workspace</div>
+          <h1 id="signup-title">Create your workspace</h1>
+          <p class="lead">Add your agency, then your clients and the buyer questions to track.</p>
+          <form id="signup-form">
+            <div class="field">
+              <label for="name">Your name</label
+              ><input id="name" name="name" autocomplete="name" maxlength="100" required />
+            </div>
+            <div class="field">
+              <label for="agency-name">Agency name</label
+              ><input
+                id="agency-name"
+                name="workspaceName"
+                autocomplete="organization"
+                maxlength="100"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="work-email">Work email</label
+              ><input
+                id="work-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                maxlength="254"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="signup-password">Password</label>
+              <div class="password-wrap">
+                <input
+                  id="signup-password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="10"
+                  maxlength="200"
+                  aria-describedby="password-help"
+                  required
+                /><button
+                  type="button"
+                  class="password-toggle"
+                  aria-controls="signup-password"
+                  aria-pressed="false"
+                  data-password-toggle
+                >
+                  Show
+                </button>
+              </div>
+              <span class="field-note" id="password-help"
+                >Use at least 10 characters and a unique password.</span
+              >
+            </div>
+            <div class="field">
+              <label for="confirm-password">Confirm password</label
+              ><input
+                id="confirm-password"
+                name="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                minlength="10"
+                maxlength="200"
+                required
+              />
+            </div>
+            <button class="button" type="submit">Create the workspace</button>
+            <p class="form-message" id="signup-message" role="status" aria-live="polite"></p>
+          </form>
+          <p class="small">Already have an account? <a href="/login">Log in</a>.</p>
+        </section>
+        <div class="xo-panel join-xo" aria-hidden="true"><span data-xo="happy"></span></div>
+      </div>
+    </main>
+    <div class="auth-panel">
+      <div class="auth-stage">
+        <span class="auth-xo" data-xo="happy"></span>
+        <p class="auth-line">See how your clients show up in AI answers, and fix it.</p>
+      </div>
+    </div>
+    <footer class="footer">
+      <div class="shell footer-inner"><p class="footer-copy">© 2026 Xaeo</p></div>
+    </footer>
+  </body>
+</html>
