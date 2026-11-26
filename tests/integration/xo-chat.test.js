@@ -121,4 +121,15 @@ describe('xo chat routes', () => {
     assert.equal((await call('POST', '/api/app/xo/cards/card-999/dismiss')).status, 404);
     assert.equal((await request('POST', `/api/app/xo/cards/${cardId}/dismiss`)).status, 401);
   });
+
+  it('closes the open scan cards of a client when a scan starts another way', async (t) => {
+    const { turn, call } = await setup(t);
+    const { events } = await turn({ text: 'run a scan' });
+    const card = events.find((e) => e.event === 'card').data.card;
+    const started = await call('POST', `/api/app/clients/${card.clientId}/scans`);
+    assert.equal(started.status, 201);
+    const chat = await call('GET', `/api/app/xo/conversations/${events[0].data.conversationId}`);
+    assert.equal(chat.json.cards[0].card.state, 'done');
+    assert.deepEqual(chat.json.cards[0].card.actions, []);
+  });
 });
