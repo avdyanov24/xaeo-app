@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Log in · Xaeo</title>
+    <meta name="description" content="Log in to your Xaeo agency workspace." />
+    <meta name="color-scheme" content="light dark" />
+    <script src="/prefs.js"></script>
+    <link rel="icon" href="/assets/favicon/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/favicon/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/portal.css" />
+    <link rel="stylesheet" href="/ui/portal-glass.css" />
+    <script src="/portal.js" defer></script>
+    <script type="module" src="/ui/js/xo-mount.js"></script>
+  </head>
+  <body data-page="login" class="account-page auth">
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/login" aria-label="Xaeo"
+          ><img
+            class="wm-light"
+            src="/assets/wordmark-163.webp"
+            srcset="/assets/wordmark-163.webp 1x, /assets/wordmark-326.webp 2x"
+            width="163"
+            height="48"
+            alt="" /><img
+            class="wm-dark"
+            src="/assets/wordmark-white-48.webp"
+            srcset="/assets/wordmark-white-48.webp 1x, /assets/wordmark-white-326.webp 2x"
+            width="163"
+            height="48"
+            alt=""
+        /></a>
+        <nav class="header-links" aria-label="Main">
+          <a href="/login" aria-current="page">Log in</a>
+        </nav>
+      </div>
+    </header>
+    <main class="mist">
+      <div class="shell page-hero grid-two login-hero">
+        <div class="login-intro">
+          <div class="eyebrow">Your agency workspace</div>
+          <h1>Log in to Xaeo</h1>
+          <p class="lead">See what AI engines say about your clients, and what to fix next.</p>
+          <div class="xo-panel login-xo"><span data-xo="wave"></span></div>
+        </div>
+        <section class="card" aria-labelledby="login-title">
+          <h2 id="login-title">Log in</h2>
+          <p>Use your work email and password.</p>
+          <form id="login-form">
+            <div class="field">
+              <label for="email">Work email</label
+              ><input
+                id="email"
+                name="email"
+                type="email"
+                autocomplete="username"
+                required
+                maxlength="254"
+              />
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="password-wrap">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                /><button
+                  type="button"
+                  class="password-toggle"
+                  aria-controls="password"
+                  aria-pressed="false"
+                  data-password-toggle
+                >
+                  Show
+                </button>
+              </div>
+            </div>
+            <button class="button" type="submit">Open my workspace</button>
+            <p class="form-message" id="login-message" role="status" aria-live="polite"></p>
+          </form>
+          <hr class="card-divider" />
+          <h3>New to Xaeo?</h3>
+          <p class="small"><a href="/signup">Create an agency workspace</a>.</p>
+        </section>
+      </div>
+    </main>
+    <div class="auth-panel">
+      <div class="auth-stage">
+        <span class="auth-xo" data-xo="wave"></span>
+        <p class="auth-line">See what AI engines say about your clients, and what to fix next.</p>
+      </div>
+    </div>
+    <footer class="footer">
+      <div class="shell footer-inner"><p class="footer-copy">© 2026 Xaeo</p></div>
+    </footer>
+  </body>
+</html>
