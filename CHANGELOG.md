@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Page routes: `/` redirects to `/app`, `/app` serves the agency web app, `/login` and `/signup` serve their pages when present.
 - The agency web app shell: design tokens, self-hosted fonts, the app page, the hash router and the client, overview, answers, questions, fixes, approvals, engines, settings and reports views. The views fill in as the API routes behind them are added.
 - Xo chat panel, action cards, command palette and guided tour scripts.
+- The Xo morph renderer (`/assets/xo-morph-v1/xo-morph.js`) that `xo.js` loads, so Xo draws on the app and account pages instead of failing with a 404.
 - HTTP server with a method and path router, JSON body parsing with size limits, input validation, a consistent JSON error envelope, request ids, security headers, structured logs and graceful shutdown.
 - `GET /api/health` liveness endpoint.
 - SQLite database through `node:sqlite`, with SQL migrations applied on start-up.
