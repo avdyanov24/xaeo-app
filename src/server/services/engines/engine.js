@@ -17,8 +17,8 @@
 
 /** Xaeo asks these two engines and no others. */
 export const ENGINES = Object.freeze({
-  chatgpt: { id: 'chatgpt', name: 'ChatGPT' },
-  claude: { id: 'claude', name: 'Claude' },
+  chatgpt: { id: 'chatgpt', name: 'ChatGPT', provider: 'OpenAI' },
+  claude: { id: 'claude', name: 'Claude', provider: 'Anthropic' },
 });
 
 export const ENGINE_IDS = Object.freeze(Object.keys(ENGINES));

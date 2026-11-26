@@ -1,10 +1,14 @@
 import { seedAccounts } from './accounts.js';
+import { seedNorthside } from './northside.js';
 
 /**
  * Seed steps in the order they run. Each step is idempotent and returns a short list of
- * what it created. Later sample data (clients, questions, answers) is added as its own step.
+ * what it created. Sample data for later areas is added as its own step.
  */
-export const SEED_STEPS = [{ name: 'accounts', run: seedAccounts }];
+export const SEED_STEPS = [
+  { name: 'accounts', run: seedAccounts },
+  { name: 'northside', run: seedNorthside },
+];
 
 /**
  * Fills a database with the seed data.

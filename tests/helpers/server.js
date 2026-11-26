@@ -9,13 +9,19 @@ import { createLogger } from '../../src/server/lib/logger.js';
  * and stops both when the test ends.
  * @param {import('node:test').TestContext} t
  */
-export async function startTestServer(t, env = {}) {
+export async function startTestServer(t, env = {}, appOptions = {}) {
   const config = loadConfig({ NODE_ENV: 'test', PORT: '0', ...env });
   const db = openDatabase(config.databasePath);
   const logger = createLogger({ level: 'silent' });
-  const server = createServer(createApp({ config, logger, db }));
+  const app = createApp({ config, logger, db, scanStepDelayMs: 0, ...appOptions });
+  const server = createServer(app);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise((resolve) => server.close(resolve)).then(() => db.close()));
+  // A scan keeps writing to the database after a cancel until it next checks, so let it stop first.
+  t.after(async () => {
+    await app.scansIdle();
+    await new Promise((resolve) => server.close(resolve));
+    db.close();
+  });
   const { port } = server.address();
   const request = (method, path, options) => send(port, method, path, options);
   return { db, request, signIn: () => signIn(request) };

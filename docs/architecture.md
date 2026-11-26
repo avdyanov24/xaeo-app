@@ -61,6 +61,17 @@ router.get(
 
 A guarded handler receives `ctx.session` with `user` and `workspace`; services take `session.workspace.id` to scope their queries. The reasoning is in [ADR 0002](adr/0002-cookie-sessions-and-scrypt.md).
 
+## Clients, questions, scans and answers
+
+`002_clients_scans.sql` adds four tables, each with a `workspace_id` so every query can be scoped to the signed-in workspace:
+
+- `clients`: the businesses an agency tracks. Archiving sets `archived_at` and keeps the row. `sample = 1` marks the example client.
+- `questions`: the buyer questions for a client. A deleted question keeps its row (`deleted_at`) so old answers still show the wording they were asked with.
+- `scans`: one run of every active question against every engine. `state` is `queued`, `running`, `done`, `failed` or `cancelled`, and `number` counts up per client.
+- `answers`: one engine's answer to one question in one scan, with the extracted mention, position, label, citations and competitors. `(scan_id, question_id, engine)` is unique.
+
+Each table has a repository in `src/server/repositories` that takes the workspace id and returns plain objects. Scans run in the server process (`src/server/services/scans/scan-runner.js`): there is no job queue. The runner asks one question at a time through an engine (`src/server/services/engines`), stores each answer as it arrives, and re-reads the scan row around every answer so a cancel takes effect before the next answer is stored. The web app polls `GET /api/app/scans/:id` to show progress. A scan that was still running when the server stopped is marked failed on start-up and can be retried. The only engine implementation is the `sample` engine, which reads the scripted Northside Plumbing answers; `GET /api/app/engines` lists ChatGPT and Claude with the state `sample`, because this build serves their answers from that scripted set.
+
 ## Errors
 
 Services and routes throw `HttpError` (or one of the helpers in `src/server/lib/errors.js`). Every error response has the same shape:

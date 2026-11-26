@@ -29,6 +29,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Engine interface for ChatGPT and Claude, and a sample engine that reads the scripted Northside Plumbing answer set (5 buyer questions, 10 answers).
 - Scan lifecycle as pure functions (queued, running, done, failed, cancelled, with retry) and answer progress counting.
 - Answer extractor: finds the client and competitors with offsets, reads citations, reports position and the Cited, Mentioned or Not mentioned label.
+- Clients, buyer questions, scans and answers: `002_clients_scans.sql`, the repositories behind it, and the Northside Plumbing sample client and its first scan in the seed.
+- Routes for clients (list, create, edit, archive, the sample client), questions, scans (start, poll, cancel, retry), answers, `GET /api/app/engines` and `GET /api/app/stats`, all scoped to the signed-in workspace.
+- In-process scan runner: a scan goes from queued to running to done over about three seconds, and one that was still running when the server stopped is marked failed on start-up so it can be retried.
+- The first-run checklist state in `GET /api/app/me`.
 
 ## [0.1.0] - 2026-11-17
 

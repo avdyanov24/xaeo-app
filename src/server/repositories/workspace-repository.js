@@ -26,3 +26,11 @@ export function findDefaultMembership(db, userId) {
     )
     .get(userId);
 }
+
+/** @returns {{ id: number, name: string } | undefined} the oldest workspace with this exact name */
+export function findWorkspaceByName(db, name) {
+  const row = db
+    .prepare('SELECT id, name FROM workspaces WHERE name = ? ORDER BY id LIMIT 1')
+    .get(name);
+  return row && { ...row };
+}

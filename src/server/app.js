@@ -8,7 +8,13 @@ import { sendError, sendJson, setSecurityHeaders } from './http/respond.js';
 import { HttpError, notFound } from './lib/errors.js';
 import { createFailureLimiter } from './lib/rate-limit.js';
 import { registerRoutes } from './routes/index.js';
+import { createAnswerService } from './services/answer-service.js';
 import { createAuthService } from './services/auth-service.js';
+import { createClientService } from './services/client-service.js';
+import { createStatsService } from './services/stats-service.js';
+import { createSampleEngines } from './services/engines/sample-engine.js';
+import { loadAnswerSet } from './services/engines/sample-answers.js';
+import { createScanRunner } from './services/scans/scan-runner.js';
 
 const { version } = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
@@ -20,11 +26,33 @@ const DEFAULT_WEB_ROOT = fileURLToPath(new URL('../web', import.meta.url));
  * Builds the request handler. Route handlers receive a context object and either
  * return a value (sent as 200 JSON), return `{ status, body }`, or write to `ctx.res` themselves.
  * Requests that match no route and are not under `/api` fall through to the static files in `webRoot`.
- * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger>, db: import('node:sqlite').DatabaseSync, webRoot?: string }} deps
+ * Scans run inside this process, asking the sample engines; `scanStepDelayMs` is the pause before
+ * each answer, so the web app's progress state is visible (tests pass 0).
+ * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger>, db: import('node:sqlite').DatabaseSync, webRoot?: string, scanStepDelayMs?: number }} deps
  */
-export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
+export function createApp({
+  config,
+  logger,
+  db,
+  webRoot = DEFAULT_WEB_ROOT,
+  scanStepDelayMs = 300,
+}) {
   const auth = createAuthService({ db, sessionTtlMs: config.sessionTtlMs });
   const sessionHttp = createSessionHttp({ auth, config });
+  const clientService = createClientService({ db });
+  const answerService = createAnswerService({ db });
+  const statsService = createStatsService({ db });
+  const answerSet = loadAnswerSet();
+  const scanRunner = createScanRunner({
+    db,
+    engines: createSampleEngines(answerSet),
+    competitors: answerSet.competitors,
+    logger,
+    stepDelayMs: scanStepDelayMs,
+  });
+  // Scans that were running when the last process stopped can never finish; mark them failed.
+  const recovered = scanRunner.recover();
+  if (recovered) logger.info('scans_recovered', { count: recovered });
   // Five wrong passwords per address and email, then a 15-minute wait.
   const loginLimiter = createFailureLimiter({ limit: 5, windowMs: 15 * 60 * 1000 });
   const router = createRouter();
@@ -34,13 +62,18 @@ export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
     logger,
     version,
     startedAt: Date.now(),
+    db,
     auth,
     sessionHttp,
+    clientService,
+    answerService,
+    statsService,
+    scanRunner,
     loginLimiter,
     staticFiles,
   });
 
-  return async function handle(req, res) {
+  async function handle(req, res) {
     const started = process.hrtime.bigint();
     const requestId = randomUUID();
     res.setHeader('X-Request-Id', requestId);
@@ -81,5 +114,9 @@ export function createApp({ config, logger, db, webRoot = DEFAULT_WEB_ROOT }) {
         ms: Math.round(ms * 10) / 10,
       });
     }
-  };
+  }
+
+  /** Resolves when no scan is running in this process any more. For shutdown and tests. */
+  handle.scansIdle = () => scanRunner.idle();
+  return handle;
 }
