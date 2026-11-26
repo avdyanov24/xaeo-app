@@ -104,3 +104,22 @@ export function deleteQuestion(db, workspaceId, id, deletedAt = new Date().toISO
     .run(deletedAt, workspaceId, id);
   return result.changes > 0;
 }
+
+/**
+ * Whether any active client of the workspace has a question switched on, for the first-run
+ * checklist. One query however many clients there are.
+ * @returns {boolean}
+ */
+export function hasActiveQuestions(db, workspaceId) {
+  const row = db
+    .prepare(
+      `SELECT EXISTS (
+         SELECT 1 FROM questions q
+         JOIN clients c ON c.id = q.client_id AND c.workspace_id = q.workspace_id
+         WHERE q.workspace_id = ? AND q.deleted_at IS NULL AND q.active = 1
+           AND c.archived_at IS NULL
+       ) AS found`,
+    )
+    .get(workspaceId);
+  return row.found === 1;
+}

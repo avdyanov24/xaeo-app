@@ -135,9 +135,12 @@ Everything the web app needs to start: the user with their role in the workspace
       { "id": "chatgpt", "name": "ChatGPT", "state": "sample" },
       { "id": "claude", "name": "Claude", "state": "sample" }
     ]
-  }
+  },
+  "onboarding": { "client": true, "questions": true, "brand": false, "report": false }
 }
 ```
+
+`onboarding` drives the first-run checklist on the clients list: `client` is true once the workspace has an active client, `questions` once an active client has a question switched on. `brand` and `report` stay `false` until branding and reports exist.
 
 ### `GET /api/app/clients` (signed in)
 

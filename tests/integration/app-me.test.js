@@ -36,6 +36,38 @@ describe('GET /api/app/me', () => {
     assert.ok(res.json.engineStatus.engines.every((engine) => engine.state === 'sample'));
   });
 
+  it('tracks the first-run checklist as clients and questions are added', async (t) => {
+    const { request } = await startTestServer(t);
+    const signup = await request('POST', '/api/signup', { json: SIGNUP });
+    const headers = { cookie: signup.headers['set-cookie'][0].split(';')[0] };
+    const onboarding = async () =>
+      (await request('GET', '/api/app/me', { headers })).json.onboarding;
+
+    assert.deepEqual(await onboarding(), {
+      client: false,
+      questions: false,
+      brand: false,
+      report: false,
+    });
+
+    const bare = { name: 'Acme Plumbing', domain: 'acme.example.com' };
+    await request('POST', '/api/app/clients', { headers, json: bare });
+    assert.deepEqual(await onboarding(), {
+      client: true,
+      questions: false,
+      brand: false,
+      report: false,
+    });
+
+    const withQuestion = {
+      ...bare,
+      domain: 'acme2.example.com',
+      questions: [{ text: 'Who is best?' }],
+    };
+    await request('POST', '/api/app/clients', { headers, json: withQuestion });
+    assert.equal((await onboarding()).questions, true);
+  });
+
   it('returns 401 without a session', async (t) => {
     const { request } = await startTestServer(t);
     assert.equal((await request('GET', '/api/app/me')).status, 401);
