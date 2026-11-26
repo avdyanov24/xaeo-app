@@ -47,4 +47,23 @@ describe('failure limiter', () => {
     assert.equal(limiter.retryAfterSeconds('a'), 0, 'oldest key was dropped');
     assert.ok(limiter.retryAfterSeconds('c') > 0);
   });
+
+  it('drops expired entries before live ones when it is full', () => {
+    const { clock, limiter } = setup({ limit: 1, maxKeys: 2 });
+    limiter.recordFailure('old');
+    clock.now = 30_000;
+    limiter.recordFailure('live');
+    clock.now = 60_000; // 'old' has expired, 'live' has 30 s left
+    limiter.recordFailure('new');
+    assert.ok(limiter.retryAfterSeconds('live') > 0, 'a live entry is kept while one has expired');
+    assert.ok(limiter.retryAfterSeconds('new') > 0);
+  });
+
+  it('starts a fresh count once the window has passed', () => {
+    const { clock, limiter } = setup();
+    for (let i = 0; i < 3; i += 1) limiter.recordFailure('k');
+    clock.now = 60_000;
+    limiter.recordFailure('k');
+    assert.equal(limiter.retryAfterSeconds('k'), 0, 'one failure in the new window is not a block');
+  });
 });

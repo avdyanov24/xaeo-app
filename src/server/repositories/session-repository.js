@@ -1,5 +1,6 @@
 /** SQL for `sessions`. Tokens never reach this layer; only their hashes do. */
 
+/** Stores a session under the hash of its token; `expiresAt` is an ISO 8601 UTC string. */
 export function insertSession(db, { tokenHash, userId, workspaceId, expiresAt }) {
   db.prepare(
     'INSERT INTO sessions (token_hash, user_id, workspace_id, expires_at) VALUES (?, ?, ?, ?)',
@@ -31,11 +32,15 @@ export function findSession(db, tokenHash) {
   };
 }
 
+/** Removes one session. Deleting an unknown hash is not an error. */
 export function deleteSession(db, tokenHash) {
   db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(tokenHash);
 }
 
-/** @returns {number} how many sessions were removed */
+/**
+ * Removes every session whose `expires_at` is at or before `nowIso` (same ISO format).
+ * @returns {number} how many sessions were removed
+ */
 export function deleteExpiredSessions(db, nowIso) {
   return Number(db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(nowIso).changes);
 }

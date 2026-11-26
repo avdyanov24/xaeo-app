@@ -12,6 +12,10 @@ describe('cookies', () => {
     assert.deepEqual(parseCookies(undefined), {});
   });
 
+  it('keeps an equals sign inside a cookie value', () => {
+    assert.deepEqual(parseCookies('token=abc==; other=1'), { token: 'abc==', other: '1' });
+  });
+
   it('serialises with safe defaults', () => {
     assert.equal(serializeCookie('s', 'a b'), 's=a%20b; Path=/; HttpOnly; SameSite=Lax');
   });
