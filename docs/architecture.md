@@ -38,6 +38,10 @@ SQLite through the built-in `node:sqlite` driver, one file per deployment (`DATA
 
 Schema changes are plain SQL files in `src/server/db/migrations`, named `NNN_name.sql`. On every start `src/server/db/migrate.js` applies the ones not yet listed in `schema_migrations`, in order, each in its own transaction. Tables are `STRICT`, and every table that holds agency data carries a `workspace_id`.
 
+## Seed data
+
+`src/server/db/seed/index.js` runs seed steps in order; each step is idempotent and lives in its own file (`accounts.js` creates Brightline Digital and the test accounts). `npm run db:seed` (`scripts/db-seed.js`) runs them against `DATABASE_PATH`, and `npm run db:reset` (`scripts/db-reset.js`) deletes the database first. Both refuse to run in production.
+
 ## Accounts and sessions
 
 `001_identity.sql` adds `users`, `workspaces`, `memberships` (owner or member) and `sessions`. Signing up creates a user and a workspace they own. A user's `role` is `user` or `admin`.

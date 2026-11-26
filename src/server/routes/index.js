@@ -1,3 +1,4 @@
+import { registerAppRoutes } from './app.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerHealthRoutes } from './health.js';
 import { registerPageRoutes } from './pages.js';
@@ -6,5 +7,6 @@ import { registerPageRoutes } from './pages.js';
 export function registerRoutes(router, deps) {
   registerHealthRoutes(router, deps);
   registerAuthRoutes(router, deps);
+  registerAppRoutes(router, deps);
   registerPageRoutes(router, deps);
 }

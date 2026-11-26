@@ -17,7 +17,22 @@ export async function startTestServer(t, env = {}) {
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)).then(() => db.close()));
   const { port } = server.address();
-  return { db, request: (method, path, options) => send(port, method, path, options) };
+  const request = (method, path, options) => send(port, method, path, options);
+  return { db, request, signIn: () => signIn(request) };
+}
+
+/** Signs up a new account and resolves with its `cookie` header value (`name=value`). */
+async function signIn(request) {
+  const res = await request('POST', '/api/signup', {
+    json: {
+      name: 'Test User',
+      email: `user-${Math.random().toString(36).slice(2)}@example.com`,
+      password: 'a long test password',
+      workspaceName: 'Test Agency',
+    },
+  });
+  if (res.status !== 201) throw new Error(`signup failed with ${res.status}`);
+  return res.headers['set-cookie'][0].split(';')[0];
 }
 
 /**

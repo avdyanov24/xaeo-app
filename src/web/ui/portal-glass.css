@@ -1,0 +1,485 @@
+/* Glass for the account pages (login, signup, team, account, admin). Loaded after /portal.css by those pages only.
+   Glass chrome and solid white content cards, the same materials as the agency app, so moving between the app and
+   the account pages feels like one product.
+   - Base: the app's lavender canvas under fixed, soft cobalt light (weaker than the app's: text sits straight on it here).
+   - Chrome: the header is frosted glass that stays at the top; on desktop auth the left panel is the app's floating
+     frosted sidebar slab.
+   - Content: cards are solid paper (hairline, small shadow, no blur). Controls are the app's capsules.
+   Everything sits inside @media screen, so print keeps portal.css as it was. Hover rules are gated to real hover. */
+
+@media screen {
+  body {
+    --pg-canvas: #e6eaff;
+    --pg-field-1: rgba(31, 59, 255, 0.22);
+    --pg-field-2: rgba(100, 120, 255, 0.28);
+    --pg-field-3: rgba(132, 112, 255, 0.3);
+    --pg-chrome: rgba(255, 255, 255, 0.62);
+    --pg-slab: rgba(255, 255, 255, 0.5);
+    --pg-blur: blur(40px) saturate(200%);
+    --pg-ring: rgba(10, 15, 51, 0.09);
+    --pg-rim: rgba(255, 255, 255, 0.72);
+    --pg-spec: rgba(255, 255, 255, 0.95);
+    --pg-fill: rgba(255, 255, 255, 0.74);
+    --pg-tint: rgba(31, 59, 255, 0.12);
+    --pg-tint-hover: rgba(31, 59, 255, 0.06);
+    --pg-active-fg: #1429b8;
+    --pg-paper: #ffffff;
+    --pg-paper-edge: rgba(10, 15, 51, 0.07);
+    --pg-paper-shadow: 0 1px 2px rgba(10, 15, 51, 0.05), 0 10px 28px -18px rgba(20, 41, 184, 0.28);
+    --pg-float:
+      0 0 0 1px rgba(10, 15, 51, 0.05), 0 1px 2px rgba(10, 15, 51, 0.04),
+      0 12px 32px -16px rgba(20, 41, 184, 0.28);
+    --pg-inner: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 28px rgba(255, 255, 255, 0.2);
+    --pg-btn: linear-gradient(180deg, #4560ff 0%, #2541ff 50%, #1b36ea 100%);
+    --pg-btn-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(10, 15, 51, 0.22),
+      0 1px 2px rgba(20, 41, 184, 0.3), 0 8px 20px -8px rgba(31, 59, 255, 0.6);
+    --pg-btn-shadow-lift:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(10, 15, 51, 0.22),
+      0 2px 4px rgba(20, 41, 184, 0.3), 0 14px 30px -10px rgba(31, 59, 255, 0.7);
+    --pg-band: linear-gradient(140deg, #2640ec 0%, #1c34ec 45%, #1429b8 100%);
+    --pg-spring: cubic-bezier(0.32, 1.28, 0.5, 1);
+    --pg-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    /* Secondary text and links straight on the light (outside a card) are a step darker so they stay AA over the
+     strongest light (glass.css's canvas tokens); cards restore the ds values. */
+    --slate: #3a4163;
+    --accent-fg: #1429b8;
+    --line-soft: rgba(10, 15, 51, 0.06);
+  }
+  :root[data-theme='dark'] body {
+    --pg-canvas: #050826;
+    --pg-field-1: rgba(31, 59, 255, 0.4);
+    --pg-field-2: rgba(84, 100, 255, 0.22);
+    --pg-field-3: rgba(92, 64, 230, 0.26);
+    --pg-chrome: rgba(10, 14, 48, 0.58);
+    --pg-slab: rgba(10, 14, 50, 0.5);
+    --pg-ring: rgba(255, 255, 255, 0.1);
+    --pg-rim: rgba(255, 255, 255, 0.12);
+    --pg-spec: rgba(255, 255, 255, 0.22);
+    --pg-fill: rgba(255, 255, 255, 0.1);
+    --pg-tint: rgba(140, 155, 255, 0.2);
+    --pg-tint-hover: rgba(140, 155, 255, 0.09);
+    --pg-active-fg: #dde2ff;
+    --pg-paper: #141a4e;
+    --pg-paper-edge: rgba(255, 255, 255, 0.09);
+    --pg-paper-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.55);
+    --pg-float:
+      0 0 0 1px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.25),
+      0 14px 36px -14px rgba(0, 0, 0, 0.6);
+    --pg-inner: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 28px rgba(140, 155, 255, 0.06);
+    --pg-btn-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 24px -8px rgba(31, 59, 255, 0.7);
+    --pg-btn-shadow-lift:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 34px -10px rgba(31, 59, 255, 0.8);
+    --slate: #a9b1da;
+    --accent-fg: #8c9bff;
+    --line-soft: rgba(255, 255, 255, 0.07);
+  }
+
+  /* ---------- Base: canvas and soft light ---------- */
+  body {
+    position: relative;
+    isolation: isolate;
+    background: var(--pg-canvas);
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -10vmax;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(60vmax 44vmax at 100% 0%, var(--pg-field-2), transparent 72%),
+      radial-gradient(54vmax 40vmax at 8% 12%, var(--pg-field-1), transparent 70%),
+      radial-gradient(64vmax 40vmax at 58% 108%, var(--pg-field-3), transparent 72%);
+  }
+  main.mist,
+  .auth > main {
+    background: transparent;
+  }
+
+  /* ---------- Chrome: the frosted header ---------- */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 0;
+    background: var(--pg-chrome);
+    -webkit-backdrop-filter: var(--pg-blur);
+    backdrop-filter: var(--pg-blur);
+    box-shadow: inset 0 -1px 0 var(--pg-ring);
+  }
+  .header-links a,
+  .header-links button {
+    border-radius: 999px;
+    transition:
+      background-color 200ms var(--pg-ease),
+      color 200ms var(--pg-ease);
+  }
+  .header-links [aria-current='page'] {
+    background: var(--pg-tint);
+    color: var(--pg-active-fg);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .header-links a:hover,
+    .header-links button:hover {
+      background: var(--pg-tint-hover);
+    }
+  }
+  /* Phones: one header row everywhere (audit P8). The page you are on is not a destination (as on desktop auth), and
+   long labels carry a short twin (admin: "Security"). */
+  .nav-short {
+    display: none;
+  }
+  @media (max-width: 560px) {
+    .header-inner {
+      flex-wrap: nowrap;
+    }
+    .header-links {
+      flex-wrap: nowrap;
+      min-width: 0;
+    }
+    .header-links a,
+    .header-links button {
+      white-space: nowrap;
+      padding-inline: 8px;
+    }
+    .header-links [aria-current='page'] {
+      display: none;
+    }
+    .nav-long {
+      display: none;
+    }
+    .nav-short {
+      display: inline;
+    }
+  }
+  @media (max-width: 360px) {
+    .header-inner {
+      gap: 6px;
+    }
+    .brand img {
+      width: 64px;
+    }
+    .header-links a,
+    .header-links button {
+      padding-inline: 6px;
+      font-size: 13px;
+    }
+  }
+  /* Same header height on every page, with or without links (the sign-in pages may show the wordmark alone). */
+  .header-inner {
+    min-height: 32px;
+  }
+  @media (min-width: 561px) {
+    .header-inner {
+      min-height: 37px;
+    }
+  }
+
+  /* ---------- Content: solid paper cards ---------- */
+  .card:not(.card-ink) {
+    --slate: #4a5275;
+    --accent-fg: #1f3bff;
+    background: var(--pg-paper);
+    border: 1px solid var(--pg-paper-edge);
+    border-radius: 24px;
+    box-shadow: var(--pg-paper-shadow);
+  }
+  :root[data-theme='dark'] .card:not(.card-ink) {
+    --slate: #a9b1da;
+    --accent-fg: #8c9bff;
+  }
+  .admin-page .card {
+    box-shadow: var(--pg-paper-shadow);
+  }
+  .invite-inbox {
+    border-color: var(--accent-fg);
+    box-shadow:
+      inset 0 0 0 1px var(--accent-fg),
+      var(--pg-paper-shadow);
+  }
+  /* Wells and rows inside paper: hairlines instead of the 2px pale-blue frames. */
+  :is(
+    .brief-item,
+    .request-item,
+    .inbox-item,
+    .notice-soft,
+    .admin-preview-note,
+    .join-success,
+    .notify-group
+  ) {
+    border-width: 1px;
+    border-color: var(--pg-paper-edge);
+  }
+  .journey-step {
+    border-width: 1px;
+    border-color: var(--pg-paper-edge);
+    border-radius: 22px;
+    background: var(--pg-paper);
+    box-shadow: var(--pg-paper-shadow);
+  }
+  .journey-step.current {
+    border-color: var(--accent-fg);
+  }
+  :is(.account-list, .team-table) :is(th, td) {
+    border-bottom-width: 1px;
+  }
+  .card-divider,
+  .team-signup,
+  .join-assurance,
+  .admin-invite-result {
+    border-top-width: 1px;
+  }
+  .spend-bar {
+    border-width: 1px;
+  }
+
+  /* ---------- Controls: the app's capsules ---------- */
+  .button,
+  button.button {
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: var(--pg-btn);
+    box-shadow: var(--pg-btn-shadow);
+    font: 700 16px/1.2 var(--font-body);
+    letter-spacing: -0.005em;
+    transition:
+      transform 420ms var(--pg-spring),
+      box-shadow 300ms var(--pg-ease),
+      background-color 200ms var(--pg-ease),
+      filter 160ms var(--pg-ease);
+  }
+  .button:active:not(:disabled) {
+    transform: scale(0.97);
+    filter: brightness(1.08);
+    box-shadow: var(--pg-btn-shadow);
+    transition-duration: 120ms;
+  }
+  .button.secondary {
+    background: var(--pg-fill);
+    color: var(--accent-fg);
+    border-color: transparent;
+    box-shadow:
+      inset 0 1px 0 var(--pg-spec),
+      inset 0 0 0 1px var(--pg-ring),
+      0 6px 16px -10px rgba(10, 15, 51, 0.3);
+  }
+  .button:disabled {
+    background: var(--pg-fill);
+    color: var(--slate);
+    box-shadow: inset 0 0 0 1px var(--pg-ring);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .button:not(:disabled):hover {
+      transform: translateY(-1px);
+      background: var(--pg-btn);
+      box-shadow: var(--pg-btn-shadow-lift);
+    }
+    .button.secondary:not(:disabled):hover {
+      background: var(--pg-paper);
+      box-shadow:
+        inset 0 1px 0 var(--pg-spec),
+        inset 0 0 0 1px var(--edge-secondary-strong),
+        0 8px 18px -10px rgba(10, 15, 51, 0.35);
+    }
+    .text-button:hover,
+    .password-toggle:hover {
+      background: var(--pg-tint-hover);
+    }
+  }
+  .text-button,
+  .password-toggle {
+    border-radius: 999px;
+  }
+  .password-toggle {
+    background: var(--pg-tint-hover);
+  }
+  /* Inputs: 1px wells at the 3:1 input edge, 14px corners, a soft focus ring. */
+  .field input,
+  .field textarea,
+  .field select {
+    border-width: 1px;
+    border-radius: 14px;
+    box-shadow: inset 0 1px 2px rgba(10, 15, 51, 0.06);
+    transition:
+      border-color 200ms var(--pg-ease),
+      box-shadow 300ms var(--pg-ease);
+  }
+  .field select {
+    border-radius: 999px;
+    padding-left: 16px;
+  }
+  .field input:focus-visible,
+  .field textarea:focus-visible,
+  .field select:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 4px rgba(31, 59, 255, 0.22);
+  }
+  :root[data-theme='dark'] :is(.field input, .field textarea, .field select):focus-visible {
+    box-shadow: 0 0 0 4px rgba(140, 155, 255, 0.34);
+  }
+  /* Pills and the admin in-page nav: glass capsules. */
+  .pill,
+  .status,
+  .role-pill:not(.owner) {
+    background: var(--pg-tint-hover);
+  }
+  .admin-quicklinks {
+    background: var(--pg-fill);
+    box-shadow:
+      inset 0 1px 0 var(--pg-rim),
+      inset 0 0 0 1px var(--pg-ring);
+  }
+  .admin-quicklinks a {
+    border-radius: 999px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .admin-quicklinks a:hover {
+      background: var(--pg-tint);
+      color: var(--pg-active-fg);
+    }
+  }
+  @media (max-width: 560px) {
+    .admin-quicklinks {
+      border-radius: 24px;
+    }
+  }
+  /* Dialogs: thick glass over a soft dim. */
+  .team-dialog {
+    border: 1px solid transparent;
+    border-radius: 28px;
+    background: var(--pg-paper);
+    box-shadow: var(--pg-inner), var(--pg-float);
+  }
+  .team-dialog::backdrop {
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .footer {
+    border-top: 0;
+  }
+
+  /* ---------- Desktop auth: the app's frosted sidebar slab on the left, the form on paper ---------- */
+  @media (min-width: 1024px) {
+    .auth {
+      background: var(--pg-canvas);
+    }
+    .auth > .site-header {
+      position: relative;
+      background: transparent;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      box-shadow: none;
+    }
+    :root:not([data-theme='dark']) .auth .site-header .brand .wm-light {
+      display: block;
+    }
+    :root:not([data-theme='dark']) .auth .site-header .brand .wm-dark {
+      display: none;
+    }
+    .auth .brand :focus-visible,
+    .auth .site-header .brand:focus-visible {
+      outline-color: var(--accent-fg);
+    }
+    .auth > .auth-panel {
+      top: 12px;
+      height: calc(100vh - 24px);
+      height: calc(100dvh - 24px);
+      margin: 12px 0 12px 12px;
+      border-radius: 28px;
+      background: var(--pg-slab);
+      color: var(--ink);
+      -webkit-backdrop-filter: var(--pg-blur);
+      backdrop-filter: var(--pg-blur);
+      box-shadow: var(--pg-inner), var(--pg-float);
+    }
+    :root[data-theme='dark'] .auth > .auth-panel {
+      color: #eef1ff;
+      box-shadow:
+        var(--pg-inner),
+        var(--pg-float),
+        inset 0 0 0 1px var(--pg-rim);
+    }
+    .auth-stage {
+      border-radius: 24px;
+      background: var(--pg-band);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 24px 48px -24px rgba(31, 59, 255, 0.6);
+    }
+    .auth main .card {
+      --slate: #4a5275;
+      --accent-fg: #1f3bff;
+      padding: 40px;
+      border: 1px solid var(--pg-paper-edge);
+      border-radius: 28px;
+      background: var(--pg-paper);
+      box-shadow: var(--pg-paper-shadow);
+    }
+    :root[data-theme='dark'] .auth main .card {
+      --slate: #a9b1da;
+      --accent-fg: #8c9bff;
+    }
+    .auth > main > .shell {
+      width: min(100%, calc(var(--auth-col) + 80px));
+    }
+    .auth > .footer > .shell {
+      width: min(100%, calc(var(--auth-col) + 80px));
+      padding-inline: 40px;
+    }
+    .auth .field :is(input, textarea, select):focus-visible {
+      box-shadow: 0 0 0 4px rgba(31, 59, 255, 0.22);
+    }
+    :root[data-theme='dark'] .auth .field :is(input, textarea, select):focus-visible {
+      box-shadow: 0 0 0 4px rgba(140, 155, 255, 0.34);
+    }
+    .auth main .button.secondary {
+      border-width: 0;
+      box-shadow:
+        inset 0 1px 0 var(--pg-spec),
+        inset 0 0 0 1px var(--pg-ring);
+    }
+  }
+
+  /* ---------- Fallbacks ---------- */
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    body {
+      --pg-chrome: var(--pg-paper);
+      --pg-slab: var(--pg-paper);
+    }
+    body::before {
+      display: none;
+    }
+    body *,
+    body *::before,
+    body *::after,
+    .team-dialog::backdrop {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+  @media (prefers-contrast: more) {
+    body {
+      --pg-paper-edge: rgba(10, 15, 51, 0.34);
+      --pg-ring: rgba(10, 15, 51, 0.45);
+    }
+    :root[data-theme='dark'] body {
+      --pg-paper-edge: rgba(255, 255, 255, 0.34);
+      --pg-ring: rgba(255, 255, 255, 0.45);
+    }
+  }
+  @media (forced-colors: active) {
+    body::before {
+      display: none;
+    }
+    body *,
+    body *::before,
+    body *::after {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+} /* @media screen */

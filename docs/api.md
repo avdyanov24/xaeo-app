@@ -45,15 +45,15 @@ These routes return HTML and files rather than JSON. Errors on them still use th
 
 ### `GET /`
 
-Redirects (`302`) to `/app`. The response is `Cache-Control: no-store`.
+Redirects (`302`) to `/app` when signed in, otherwise to `/login`. Redirects are `Cache-Control: no-store`.
 
 ### `GET /app`
 
-The agency web app: serves `src/web/app.html`. The page is `Cache-Control: no-cache`, so a new version shows on the next navigation.
+The agency web app: serves `src/web/app.html` to a signed-in user. The page is `Cache-Control: no-cache`, so a new version shows on the next navigation. Without a session it redirects to `/login?next=%2Fapp`, and the login page returns there afterwards.
 
 ### `GET /login`, `GET /signup`
 
-Serve `login.html` and `signup.html` from `src/web` when those pages exist, and `404` otherwise.
+Serve `login.html` and `signup.html` from `src/web`. A signed-in user is redirected to `/app` instead.
 
 ### `GET /<path>` for files in `src/web`
 
@@ -108,3 +108,33 @@ Ends the current session and clears the cookie. `204`, also when there was no se
 ### `GET /api/session` (signed in)
 
 `200` with the session body for the cookie sent.
+
+## App
+
+### `GET /api/app/me` (signed in)
+
+Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`.
+
+```json
+{
+  "user": {
+    "id": 1,
+    "email": "alex@brightline.example",
+    "name": "Alex Morgan",
+    "role": "user",
+    "workspaceRole": "owner"
+  },
+  "workspace": { "id": 1, "name": "Brightline Digital", "timezone": "Europe/London" },
+  "engines": [
+    { "id": "chatgpt", "name": "ChatGPT" },
+    { "id": "claude", "name": "Claude" }
+  ],
+  "engineStatus": {
+    "mode": "sample",
+    "engines": [
+      { "id": "chatgpt", "name": "ChatGPT", "state": "sample" },
+      { "id": "claude", "name": "Claude", "state": "sample" }
+    ]
+  }
+}
+```
