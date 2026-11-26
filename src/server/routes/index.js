@@ -1,6 +1,7 @@
 import { registerAppRoutes } from './app.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerClientRoutes } from './clients.js';
+import { registerEngineRoutes } from './engines.js';
 import { registerHealthRoutes } from './health.js';
 import { registerPageRoutes } from './pages.js';
 import { registerQuestionRoutes } from './questions.js';
@@ -12,6 +13,7 @@ export function registerRoutes(router, deps) {
   registerAuthRoutes(router, deps);
   registerAppRoutes(router, deps);
   registerClientRoutes(router, deps);
+  registerEngineRoutes(router, deps);
   registerQuestionRoutes(router, deps);
   registerScanRoutes(router, deps);
   registerPageRoutes(router, deps);

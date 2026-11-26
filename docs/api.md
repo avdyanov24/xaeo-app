@@ -203,6 +203,20 @@ Brings an archived client back. The weekly rescan stays off until it is switched
 
 Adds the Northside Plumbing example client with its five questions and a finished first scan (named in 2 of 10 answers). A workspace has one: calling this again returns its id with `200`. Responds `201` with `{ "id" }` when it was added.
 
+### `GET /api/app/engines` (signed in)
+
+The engines scans ask, and where their answers come from. Xaeo asks ChatGPT and Claude only. Every engine is in the `sample` state because answers come from a scripted sample set, which the engines view shows as such.
+
+```json
+{
+  "mode": "sample",
+  "engines": [
+    { "id": "chatgpt", "name": "ChatGPT", "provider": "OpenAI", "state": "sample" },
+    { "id": "claude", "name": "Claude", "provider": "Anthropic", "state": "sample" }
+  ]
+}
+```
+
 ### `GET /api/app/clients/:id/questions` (signed in)
 
 The client's questions in order, without the deleted ones: `[{ "id", "text", "intent", "active" }]`.
