@@ -3,3 +3,5 @@ coverage/
 data/
 package-lock.json
 CHANGELOG.md
+src/web/assets/xo-app/*.json
+src/web/assets/xo-morph-v1/*.json
