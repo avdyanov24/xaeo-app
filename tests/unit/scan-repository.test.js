@@ -121,8 +121,11 @@ describe('answer repository', () => {
       citedUrls: [],
       competitors: ['Rapid Flow'],
     });
-    assert.deepEqual(answers.findAnswer(db, ws, id), {
+    const stored = answers.findAnswer(db, ws, id);
+    assert.match(stored.createdAt, /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/);
+    assert.deepEqual(stored, {
       id,
+      createdAt: stored.createdAt,
       scanId,
       questionId,
       questionText: 'Who is best?',

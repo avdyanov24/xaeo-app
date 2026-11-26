@@ -17,11 +17,12 @@
  * @property {{ url: string, title: string, domain: string }[]} citations
  * @property {string[]} citedUrls
  * @property {string[]} competitors
+ * @property {string} createdAt when the answer was collected, as an ISO timestamp
  */
 
 const COLUMNS = `id, scan_id AS scanId, question_id AS questionId, question_text AS questionText,
   engine, status, text, error, mentioned, position, label, citations,
-  cited_urls AS citedUrls, competitors`;
+  cited_urls AS citedUrls, competitors, created_at AS createdAt`;
 
 const toAnswer = (row) => ({
   ...row,

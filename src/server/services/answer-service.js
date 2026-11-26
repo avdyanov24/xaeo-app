@@ -127,5 +127,34 @@ export function createAnswerService({ db }) {
         cells,
       };
     },
+
+    /**
+     * One answer in full, for the reader beside the grid: the text, who was recommended instead
+     * and the sources cited.
+     * @throws 404 when the answer does not exist in this workspace
+     */
+    detail(workspaceId, answerId) {
+      const answer = answers.findAnswer(db, workspaceId, answerId);
+      const scan = answer && scans.findScan(db, workspaceId, answer.scanId);
+      const client = scan && clients.findClient(db, workspaceId, scan.clientId);
+      if (!client) throw notFound('Answer not found.');
+      return {
+        id: publicId(answer.id),
+        scanId: scan.id,
+        engine: ENGINES[answer.engine].name,
+        status: answer.status,
+        label: answer.label,
+        position: answer.position,
+        question: answer.questionText,
+        clientName: client.name,
+        text: answer.text,
+        error: answer.error,
+        competitors: answer.competitors,
+        citations: answer.citations,
+        mode: 'sample',
+        method: 'Read from the scripted sample answer set. No engine was asked.',
+        collectedAt: answer.createdAt,
+      };
+    },
   };
 }

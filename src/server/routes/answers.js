@@ -16,4 +16,9 @@ export function registerAnswerRoutes(router, { sessionHttp, answerService }) {
       );
     }),
   );
+
+  router.get(
+    '/api/app/answers/:id',
+    route((ctx, workspaceId) => answerService.detail(workspaceId, idParam(ctx.params))),
+  );
 }

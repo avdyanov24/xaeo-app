@@ -265,6 +265,32 @@ The Answers tab's grid for one scan: the questions down the side, the engines ac
 
 `cells` is keyed by question id, then engine id. Ids inside `questions` and `cells` are strings. `label` is `Cited` (named, and the client's site is a source), `Mentioned`, `Not mentioned` or `Failed`. `comparisonToPrevious.comparable` is true when the previous finished scan asked the same questions; otherwise the scan starts a new baseline and `reasons` says why. A client with no finished scan gets `scan: null` and empty lists. `404` for an unknown client, an unknown or malformed `scan`, or anything in another workspace.
 
+### `GET /api/app/answers/:id` (signed in)
+
+One answer in full, for the reader that opens from a grid cell (`id` is the cell's `id`).
+
+```json
+{
+  "id": "2",
+  "scanId": 1,
+  "engine": "Claude",
+  "status": "ok",
+  "label": "Mentioned",
+  "position": 2,
+  "question": "Who is the best emergency plumber in Leeds?",
+  "clientName": "Northside Plumbing",
+  "text": "...",
+  "error": null,
+  "competitors": ["Rapid Flow"],
+  "citations": [{ "url": "https://...", "title": "...", "domain": "..." }],
+  "mode": "sample",
+  "method": "Read from the scripted sample answer set. No engine was asked.",
+  "collectedAt": "2026-11-26T10:00:00.000Z"
+}
+```
+
+`engine` is the display name. `position` is the client's place among the businesses named, or `null` when it is not named. A failed answer has `status: "failed"`, an `error` and no text. `404` for an unknown or malformed id, or an answer in another workspace.
+
 ### `GET /api/app/clients/:id/questions` (signed in)
 
 The client's questions in order, without the deleted ones: `[{ "id", "text", "intent", "active" }]`.

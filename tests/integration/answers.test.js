@@ -105,3 +105,51 @@ describe('GET /api/app/clients/:id/answers', () => {
     );
   });
 });
+
+describe('GET /api/app/answers/:id', () => {
+  it('requires a session', async (t) => {
+    const { request } = await startTestServer(t);
+    assert.equal((await request('GET', '/api/app/answers/1')).status, 401);
+  });
+
+  it('reads the Northside story: Claude names Northside second, ChatGPT sends buyers to others', async (t) => {
+    const { call, sample } = await setup(t);
+    const { json: grid } = await call('GET', `/api/app/clients/${sample}/answers`);
+    const hero = grid.questions[0];
+    assert.equal(hero.text, 'Who is the best emergency plumber in Leeds?');
+
+    const claude = await call('GET', `/api/app/answers/${grid.cells[hero.id].claude.id}`);
+    assert.equal(claude.status, 200);
+    assert.equal(claude.json.engine, 'Claude');
+    assert.equal(claude.json.clientName, 'Northside Plumbing');
+    assert.equal(claude.json.question, hero.text);
+    assert.equal(claude.json.position, 2);
+    assert.equal(claude.json.mode, 'sample');
+    assert.ok(claude.json.text.includes('Northside'));
+    assert.ok(Array.isArray(claude.json.citations));
+
+    const chatgpt = (await call('GET', `/api/app/answers/${grid.cells[hero.id].chatgpt.id}`)).json;
+    assert.equal(chatgpt.engine, 'ChatGPT');
+    assert.equal(chatgpt.label, 'Not mentioned');
+    assert.equal(chatgpt.position, null);
+    assert.ok(chatgpt.competitors.includes('Rapid Flow'));
+    assert.ok(chatgpt.competitors.includes('CityPipe'));
+  });
+
+  it('answers 404 for an unknown or malformed id', async (t) => {
+    const { call } = await setup(t);
+    assert.equal((await call('GET', '/api/app/answers/9999')).status, 404);
+    assert.equal((await call('GET', '/api/app/answers/abc')).status, 404);
+  });
+
+  it('never shows an answer to another workspace', async (t) => {
+    const owner = await setup(t);
+    const { json: grid } = await owner.call('GET', `/api/app/clients/${owner.sample}/answers`);
+    const id = Object.values(grid.cells)[0].claude.id;
+    const otherCookie = await owner.signIn();
+    const res = await owner.request('GET', `/api/app/answers/${id}`, {
+      headers: { cookie: otherCookie },
+    });
+    assert.equal(res.status, 404);
+  });
+});
