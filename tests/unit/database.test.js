@@ -10,7 +10,7 @@ const tableNames = (db) =>
     .map((row) => row.name);
 
 describe('database', () => {
-  it('applies the identity and client migrations on open', () => {
+  it('applies the identity, client and Xo migrations on open', () => {
     const db = openDatabase(':memory:');
     assert.deepEqual(tableNames(db), [
       'answers',
@@ -22,6 +22,13 @@ describe('database', () => {
       'sessions',
       'users',
       'workspaces',
+      'xo_approvals',
+      'xo_artifact_events',
+      'xo_artifact_versions',
+      'xo_artifacts',
+      'xo_cards',
+      'xo_conversations',
+      'xo_messages',
     ]);
     assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
   });
@@ -39,6 +46,32 @@ describe('database', () => {
     db.prepare('DELETE FROM clients WHERE id = 1').run();
     for (const table of ['questions', 'scans', 'answers'])
       assert.equal(db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n, 1, table);
+  });
+
+  it('deletes a client with the Xo drafts, approvals and cards made for it', () => {
+    const db = openDatabase(':memory:');
+    db.exec(`
+      INSERT INTO workspaces (id, name) VALUES (1, 'A');
+      INSERT INTO users (id, email, name, password_hash) VALUES (1, 'a@one.test', 'A', 'x');
+      INSERT INTO clients (id, workspace_id, name, domain) VALUES (1, 1, 'One', 'one.test');
+      INSERT INTO xo_conversations (id, workspace_id, user_id) VALUES (1, 1, 1);
+      INSERT INTO xo_artifacts (id, workspace_id, client_id, kind, title, code)
+        VALUES (1, 1, 1, 'llms_txt', 'llms.txt', '# One');
+      INSERT INTO xo_artifact_versions (artifact_id, version, code, content_hash) VALUES (1, 1, '# One', 'h');
+      INSERT INTO xo_approvals (workspace_id, artifact_id, version, content_hash) VALUES (1, 1, 1, 'h');
+      INSERT INTO xo_artifact_events (workspace_id, artifact_id, action, actor_type) VALUES (1, 1, 'artifact_created', 'xo');
+      INSERT INTO xo_cards (workspace_id, conversation_id, client_id, kind, artifact_id) VALUES (1, 1, 1, 'artifact', 1);
+    `);
+    db.prepare('DELETE FROM clients WHERE id = 1').run();
+    for (const table of [
+      'xo_artifacts',
+      'xo_artifact_versions',
+      'xo_approvals',
+      'xo_artifact_events',
+      'xo_cards',
+    ])
+      assert.equal(db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n, 0, table);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM xo_conversations').get().n, 1);
   });
 
   it('rejects an unknown engine, scan state or question intent', () => {
