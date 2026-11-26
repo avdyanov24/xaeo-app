@@ -26,6 +26,7 @@ Xaeo is a web app for SEO and marketing agencies. When a potential customer asks
 - [Project status](#project-status)
 - [Architecture](#architecture)
 - [Getting started](#getting-started)
+- [Test accounts](#test-accounts)
 - [Scripts](#scripts)
 - [Configuration](#configuration)
 - [Testing](#testing)
@@ -74,6 +75,7 @@ git clone https://github.com/avdyanov24/xaeo-app.git
 cd xaeo-app
 npm ci
 cp .env.example .env
+npm run db:seed
 npm run dev
 ```
 
@@ -83,7 +85,7 @@ The server listens on <http://127.0.0.1:3000>. Check it with:
 curl http://127.0.0.1:3000/api/health
 ```
 
-The web app is at <http://127.0.0.1:3000/app>.
+The web app is at <http://127.0.0.1:3000/app>. Without a session it sends you to the login page; sign in with a [test account](#test-accounts).
 
 ### With Docker
 
@@ -93,17 +95,30 @@ docker compose up --build
 
 The container runs as a non-root user and reports its health through `/api/health`.
 
+## Test accounts
+
+`npm run db:seed` creates the Brightline Digital workspace with one account per role. The passwords are for local use and are published here on purpose; seeding refuses to run in production.
+
+| Role  | Email                   | Password             | In the workspace |
+| ----- | ----------------------- | -------------------- | ---------------- |
+| User  | `user@brightline.test`  | `brightline-user-1`  | Owner            |
+| Admin | `admin@brightline.test` | `brightline-admin-1` | Member           |
+
+`npm run db:reset` deletes the local database and seeds it again. You can also create a new workspace at `/signup`.
+
 ## Scripts
 
-| Command                 | What it does                                        |
-| ----------------------- | --------------------------------------------------- |
-| `npm start`             | Start the server (reads `.env` when present)        |
-| `npm run dev`           | Start the server and restart it when files change   |
-| `npm test`              | Run unit and integration tests with `node --test`   |
-| `npm run test:coverage` | Run the tests with a coverage report                |
-| `npm run lint`          | Lint with ESLint (`lint:fix` applies safe fixes)    |
-| `npm run format`        | Format with Prettier (`format:check` only checks)   |
-| `npm run check`         | Lint, format check and tests: the same checks as CI |
+| Command                 | What it does                                                      |
+| ----------------------- | ----------------------------------------------------------------- |
+| `npm start`             | Start the server (reads `.env` when present)                      |
+| `npm run dev`           | Start the server and restart it when files change                 |
+| `npm run db:seed`       | Create the sample workspace and test accounts (not in production) |
+| `npm run db:reset`      | Delete the local database, recreate it and seed it again          |
+| `npm test`              | Run unit and integration tests with `node --test`                 |
+| `npm run test:coverage` | Run the tests with a coverage report                              |
+| `npm run lint`          | Lint with ESLint (`lint:fix` applies safe fixes)                  |
+| `npm run format`        | Format with Prettier (`format:check` only checks)                 |
+| `npm run check`         | Lint, format check and tests: the same checks as CI               |
 
 ## Configuration
 

@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `GET /api/health` liveness endpoint.
 - SQLite database through `node:sqlite`, with SQL migrations applied on start-up.
 - Accounts: sign up, log in, log out and `GET /api/session`, with scrypt password hashing, cookie sessions stored as token hashes, `requireUser` and `requireAdmin` route guards, and a limit on failed logins per address and email.
+- Login and signup pages, the account page and app stylesheets, and inline form errors.
+- `GET /api/app/me`, and redirects that send signed-out visitors from `/app` to `/login` and back.
+- `npm run db:seed` with the Brightline Digital workspace and a user and an admin test account, and `npm run db:reset`.
 - `DATABASE_PATH` and `SESSION_TTL_DAYS` settings; the Docker image keeps the database on a volume.
 - Unit and integration tests with the Node.js test runner.
 - ESLint and Prettier configuration and `npm run check`. Loose `== null` comparisons are allowed for null-or-undefined checks; every other `==` is an error.
