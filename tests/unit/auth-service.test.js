@@ -97,4 +97,13 @@ describe('auth service', () => {
     db.prepare('DELETE FROM memberships WHERE user_id = ?').run(session.user.id);
     assert.equal(auth.getSession(token), null);
   });
+
+  it('login removes sessions that have already expired', async () => {
+    const { token } = await auth.signup(ALEX);
+    clock.now += 60_000;
+    await auth.login({ email: ALEX.email, password: ALEX.password });
+    const hashes = db.prepare('SELECT token_hash AS h FROM sessions').all();
+    assert.equal(hashes.length, 1, 'only the new session is left');
+    assert.notEqual(hashes[0].h, hashToken(token));
+  });
 });
