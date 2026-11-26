@@ -110,4 +110,15 @@ describe('xo chat routes', () => {
       rateLimit: null,
     });
   });
+
+  it('dismisses a scan card once and refuses a second time', async (t) => {
+    const { turn, call, request } = await setup(t);
+    const { events } = await turn({ text: 'run a scan' });
+    const { cardId } = events.find((e) => e.event === 'card').data.card;
+    const first = await call('POST', `/api/app/xo/cards/${cardId}/dismiss`);
+    assert.equal(first.json.card.state, 'dismissed');
+    assert.equal((await call('POST', `/api/app/xo/cards/${cardId}/dismiss`)).status, 409);
+    assert.equal((await call('POST', '/api/app/xo/cards/card-999/dismiss')).status, 404);
+    assert.equal((await request('POST', `/api/app/xo/cards/${cardId}/dismiss`)).status, 401);
+  });
 });
