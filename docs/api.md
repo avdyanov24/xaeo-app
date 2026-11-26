@@ -108,3 +108,33 @@ Ends the current session and clears the cookie. `204`, also when there was no se
 ### `GET /api/session` (signed in)
 
 `200` with the session body for the cookie sent.
+
+## App
+
+### `GET /api/app/me` (signed in)
+
+Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`.
+
+```json
+{
+  "user": {
+    "id": 1,
+    "email": "alex@brightline.example",
+    "name": "Alex Morgan",
+    "role": "user",
+    "workspaceRole": "owner"
+  },
+  "workspace": { "id": 1, "name": "Brightline Digital", "timezone": "Europe/London" },
+  "engines": [
+    { "id": "chatgpt", "name": "ChatGPT" },
+    { "id": "claude", "name": "Claude" }
+  ],
+  "engineStatus": {
+    "mode": "sample",
+    "engines": [
+      { "id": "chatgpt", "name": "ChatGPT", "state": "sample" },
+      { "id": "claude", "name": "Claude", "state": "sample" }
+    ]
+  }
+}
+```
