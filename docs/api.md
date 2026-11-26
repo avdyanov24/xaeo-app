@@ -437,3 +437,7 @@ Marks an approved draft as exported. Body: `{ "approvalId": 12 }`, which must be
 ### `GET /api/app/xo/artifacts/:id/download` (signed in)
 
 The approved draft as a file attachment, named after the client's domain (`llms.txt` for an llms.txt draft). `400` until the draft is approved.
+
+### `POST /api/app/xo/cards/:id/dismiss` (signed in)
+
+"Not now" on a scan card in a chat. `:id` is the `cardId` the card carries (`card-12`). Answers `{ card }` with the card in its `dismissed` state. `409 card_not_open` when the card was already answered, `404` for a draft card or a card in another workspace.

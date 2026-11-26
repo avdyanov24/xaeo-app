@@ -171,4 +171,10 @@ export function registerXoRoutes(
       ctx.res.end(ctx.req.method === 'HEAD' ? undefined : file.body);
     }),
   );
+
+  // The scan card's "Not now". Cards for drafts are not dismissed; a draft is rejected instead.
+  router.post(
+    '/api/app/xo/cards/:id/dismiss',
+    route((ctx, session) => chatService.dismissCard(session, ctx.params.id)),
+  );
 }
