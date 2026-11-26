@@ -1,3 +1,4 @@
+import { registerAnswerRoutes } from './answers.js';
 import { registerAppRoutes } from './app.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerClientRoutes } from './clients.js';
@@ -13,6 +14,7 @@ export function registerRoutes(router, deps) {
   registerAuthRoutes(router, deps);
   registerAppRoutes(router, deps);
   registerClientRoutes(router, deps);
+  registerAnswerRoutes(router, deps);
   registerEngineRoutes(router, deps);
   registerQuestionRoutes(router, deps);
   registerScanRoutes(router, deps);

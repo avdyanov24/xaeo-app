@@ -8,6 +8,7 @@ import { sendError, sendJson, setSecurityHeaders } from './http/respond.js';
 import { HttpError, notFound } from './lib/errors.js';
 import { createFailureLimiter } from './lib/rate-limit.js';
 import { registerRoutes } from './routes/index.js';
+import { createAnswerService } from './services/answer-service.js';
 import { createAuthService } from './services/auth-service.js';
 import { createClientService } from './services/client-service.js';
 import { createSampleEngines } from './services/engines/sample-engine.js';
@@ -38,6 +39,7 @@ export function createApp({
   const auth = createAuthService({ db, sessionTtlMs: config.sessionTtlMs });
   const sessionHttp = createSessionHttp({ auth, config });
   const clientService = createClientService({ db });
+  const answerService = createAnswerService({ db });
   const answerSet = loadAnswerSet();
   const scanRunner = createScanRunner({
     db,
@@ -62,6 +64,7 @@ export function createApp({
     auth,
     sessionHttp,
     clientService,
+    answerService,
     scanRunner,
     loginLimiter,
     staticFiles,

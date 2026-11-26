@@ -217,6 +217,54 @@ The engines scans ask, and where their answers come from. Xaeo asks ChatGPT and 
 }
 ```
 
+### `GET /api/app/clients/:id/answers` (signed in)
+
+The Answers tab's grid for one scan: the questions down the side, the engines across, one cell per answer. Without a query it is the newest finished scan; `?scan=<id>` opens an older one (a finished or cancelled scan of this client). `scans` lists the scans that can be opened, newest first, for the scan picker.
+
+```json
+{
+  "scan": {
+    "id": 1,
+    "number": 1,
+    "state": "done",
+    "status": "done",
+    "finishedAt": "2026-11-26T10:00:00.000Z",
+    "ok": 10,
+    "mentioned": 2,
+    "failed": 0,
+    "configuration": {
+      "state": "recorded",
+      "source": "sample",
+      "snapshot": { "methodology": "..." }
+    },
+    "comparisonToPrevious": { "comparable": false, "reasons": [{ "message": "..." }] }
+  },
+  "scans": [
+    {
+      "id": 1,
+      "number": 1,
+      "state": "done",
+      "finishedAt": "2026-11-26T10:00:00.000Z",
+      "ok": 10,
+      "mentioned": 2,
+      "failed": 0
+    }
+  ],
+  "questions": [{ "id": "1", "text": "Who is the best emergency plumber in Leeds?" }],
+  "engines": [
+    { "id": "chatgpt", "name": "ChatGPT" },
+    { "id": "claude", "name": "Claude" }
+  ],
+  "cells": {
+    "1": {
+      "claude": { "id": "2", "status": "ok", "label": "Mentioned", "position": 2, "error": null }
+    }
+  }
+}
+```
+
+`cells` is keyed by question id, then engine id. Ids inside `questions` and `cells` are strings. `label` is `Cited` (named, and the client's site is a source), `Mentioned`, `Not mentioned` or `Failed`. `comparisonToPrevious.comparable` is true when the previous finished scan asked the same questions; otherwise the scan starts a new baseline and `reasons` says why. A client with no finished scan gets `scan: null` and empty lists. `404` for an unknown client, an unknown or malformed `scan`, or anything in another workspace.
+
 ### `GET /api/app/clients/:id/questions` (signed in)
 
 The client's questions in order, without the deleted ones: `[{ "id", "text", "intent", "active" }]`.
