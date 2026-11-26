@@ -11,6 +11,7 @@ import { runSeeds } from '../../src/server/db/seed/index.js';
 import { createAuthService } from '../../src/server/services/auth-service.js';
 
 const SEED_SCRIPT = fileURLToPath(new URL('../../scripts/db-seed.js', import.meta.url));
+const RESET_SCRIPT = fileURLToPath(new URL('../../scripts/db-reset.js', import.meta.url));
 
 describe('seed data', () => {
   it('creates Brightline Digital with a user and an admin who can log in', async () => {
@@ -44,12 +45,14 @@ describe('seed data', () => {
   });
 });
 
+const runScript = (script, env) =>
+  spawnSync(process.execPath, [script], {
+    env: { PATH: process.env.PATH, LOG_LEVEL: 'silent', ...env },
+    encoding: 'utf8',
+  });
+
 describe('npm run db:seed', () => {
-  const run = (env) =>
-    spawnSync(process.execPath, [SEED_SCRIPT], {
-      env: { PATH: process.env.PATH, LOG_LEVEL: 'silent', ...env },
-      encoding: 'utf8',
-    });
+  const run = (env) => runScript(SEED_SCRIPT, env);
 
   it('seeds the database file it is pointed at', () => {
     const dir = mkdtempSync(join(tmpdir(), 'xaeo-seed-'));
@@ -66,5 +69,38 @@ describe('npm run db:seed', () => {
     const result = run({ NODE_ENV: 'production', DATABASE_PATH: ':memory:' });
     assert.equal(result.status, 1);
     assert.match(result.stderr, /refuses to run with NODE_ENV=production/);
+  });
+});
+
+describe('npm run db:reset', () => {
+  it('wipes the database and seeds it again', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'xaeo-reset-'));
+    const path = join(dir, 'reset.db');
+    try {
+      const db = openDatabase(path);
+      await runSeeds(db);
+      db.prepare('INSERT INTO workspaces (name) VALUES (?)').run('Left over');
+      db.close();
+
+      const result = runScript(RESET_SCRIPT, { NODE_ENV: 'development', DATABASE_PATH: path });
+      assert.equal(result.status, 0, result.stderr);
+      const fresh = openDatabase(path);
+      const names = fresh
+        .prepare('SELECT name FROM workspaces')
+        .all()
+        .map((row) => row.name);
+      fresh.close();
+      assert.deepEqual(names, [SEED_WORKSPACE]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses to run in production or without a database file', () => {
+    const production = runScript(RESET_SCRIPT, { NODE_ENV: 'production', DATABASE_PATH: 'x.db' });
+    assert.equal(production.status, 1);
+    const memory = runScript(RESET_SCRIPT, { NODE_ENV: 'development', DATABASE_PATH: ':memory:' });
+    assert.equal(memory.status, 1);
+    assert.match(memory.stderr, /needs a database file/);
   });
 });
