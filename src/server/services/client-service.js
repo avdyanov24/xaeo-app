@@ -1,11 +1,14 @@
 import { transaction } from '../db/database.js';
-import { notFound, validationFailed } from '../lib/errors.js';
+import { conflict, notFound, validationFailed } from '../lib/errors.js';
 import * as answers from '../repositories/answer-repository.js';
 import * as clients from '../repositories/client-repository.js';
 import * as questions from '../repositories/question-repository.js';
 import * as scans from '../repositories/scan-repository.js';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Each question is asked of every engine on every scan, so the list is capped. */
+export const MAX_QUESTIONS = 50;
 
 /**
  * Reduces what a person types or pastes ("https://www.Northsideplumbing.co.uk/contact") to the bare
@@ -68,9 +71,32 @@ export function createClientService({ db, now = Date.now }) {
     return client;
   };
 
+  /** A client with the lists its pages need: questions in order, and scans newest first. */
   const detail = (workspaceId, id) => {
     const client = mustFind(workspaceId, id);
-    return { ...summarize(db, client), running: scans.findActiveScan(db, workspaceId, id) ?? null };
+    return {
+      ...summarize(db, client),
+      questions: questions
+        .listQuestions(db, workspaceId, id)
+        .map(({ id: questionId, text, intent, active }) => ({
+          id: questionId,
+          text,
+          intent,
+          active,
+        })),
+      scans: scans.listScans(db, workspaceId, id).map((scan) => ({
+        ...scan,
+        ...answers.scanTotals(db, workspaceId, scan.id),
+      })),
+      running: scans.findActiveScan(db, workspaceId, id) ?? null,
+    };
+  };
+
+  /** Finds a question in this workspace; one from another workspace is a 404. */
+  const mustFindQuestion = (workspaceId, id) => {
+    const question = questions.findQuestion(db, workspaceId, id);
+    if (!question) throw notFound('Question not found.');
+    return question;
   };
 
   return {
@@ -138,6 +164,29 @@ export function createClientService({ db, now = Date.now }) {
     unarchive(workspaceId, id) {
       mustFind(workspaceId, id);
       clients.setArchivedAt(db, workspaceId, id, null);
+    },
+
+    /** @returns the client as `get` returns it, so the page can redraw from one response */
+    addQuestion(workspaceId, clientId, { text, intent }) {
+      mustFind(workspaceId, clientId);
+      if (questions.listQuestions(db, workspaceId, clientId).length >= MAX_QUESTIONS)
+        throw conflict(`A client can have up to ${MAX_QUESTIONS} questions.`);
+      questions.insertQuestion(db, { workspaceId, clientId, text, intent });
+      return detail(workspaceId, clientId);
+    },
+
+    /** Changes the wording, intent or on/off switch. Past answers keep the wording they were asked with. */
+    updateQuestion(workspaceId, id, fields) {
+      const { clientId } = mustFindQuestion(workspaceId, id);
+      questions.updateQuestion(db, workspaceId, id, fields);
+      return detail(workspaceId, clientId);
+    },
+
+    /** Removes the question from the list; answers already collected keep pointing at it. */
+    deleteQuestion(workspaceId, id) {
+      const { clientId } = mustFindQuestion(workspaceId, id);
+      questions.deleteQuestion(db, workspaceId, id);
+      return detail(workspaceId, clientId);
     },
   };
 }

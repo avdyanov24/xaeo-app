@@ -181,7 +181,7 @@ Adds a client. Body: `name`, `domain` (a bare host or a pasted address, stored a
 
 ### `GET /api/app/clients/:id` (signed in)
 
-One client in the shape above, plus `running`, the scan in progress or `null`. `404` for a client in another workspace.
+One client in the shape above, with differences: `questions` is the list `[{ id, text, intent, active }]` in order (in the list it is a count), and it adds `scans` (every scan, newest first, with `ok`, `mentioned` and `failed` totals) and `running`, the scan in progress or `null`. `404` for a client in another workspace.
 
 ### `POST /api/app/clients/:id` (signed in)
 
@@ -202,3 +202,27 @@ Brings an archived client back. The weekly rescan stays off until it is switched
 ### `POST /api/app/sample` (signed in)
 
 Adds the Northside Plumbing example client with its five questions and a finished first scan (named in 2 of 10 answers). A workspace has one: calling this again returns its id with `200`. Responds `201` with `{ "id" }` when it was added.
+
+### `GET /api/app/clients/:id/questions` (signed in)
+
+The client's questions in order, without the deleted ones: `[{ "id", "text", "intent", "active" }]`.
+
+### `POST /api/app/clients/:id/questions` (signed in)
+
+Adds a question at the end. Body: `text` (3 to 200 characters) and optional `intent` (default `find`). A client has at most 50 questions (`409` beyond that). Responds `201` with the client as `GET /api/app/clients/:id` returns it.
+
+### `POST /api/app/questions/:id` (signed in)
+
+Changes `text`, `intent` or `active` (a switched-off question is skipped by scans). Responds with the client. Answers already collected keep the wording they were asked with. `PATCH` does the same.
+
+### `PATCH /api/app/questions/:id` (signed in)
+
+Same as `POST /api/app/questions/:id`.
+
+### `POST /api/app/questions/:id/delete` (signed in)
+
+Removes the question from the list; past answers keep it. Responds with the client. `DELETE /api/app/questions/:id` does the same.
+
+### `DELETE /api/app/questions/:id` (signed in)
+
+Same as `POST /api/app/questions/:id/delete`.

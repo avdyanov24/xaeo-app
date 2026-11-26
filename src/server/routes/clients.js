@@ -26,7 +26,7 @@ const UPDATE = {
 };
 
 const STARTER_QUESTION = {
-  text: { type: 'string', required: true, min: 3, max: 300 },
+  text: { type: 'string', required: true, min: 3, max: 200 },
   intent: { type: 'enum', values: INTENTS, default: 'find' },
 };
 

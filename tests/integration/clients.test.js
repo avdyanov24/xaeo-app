@@ -36,7 +36,14 @@ describe('client routes', () => {
     const { json: client } = await call('GET', `/api/app/clients/${created.json.id}`);
     assert.equal(client.domain, 'harbordental.co.uk');
     assert.equal(client.country, 'GB');
-    assert.equal(client.questions, 2);
+    assert.deepEqual(
+      client.questions.map(({ text, intent, active }) => ({ text, intent, active })),
+      [
+        { text: NEW_CLIENT.questions[0].text, intent: 'urgent', active: true },
+        { text: NEW_CLIENT.questions[1].text, intent: 'find', active: true },
+      ],
+    );
+    assert.deepEqual(client.scans, []);
     assert.equal(client.status, 'active');
     assert.equal(client.weekly, true);
     assert.equal(client.latest, null);
