@@ -45,7 +45,8 @@ Xaeo is under active development. This list tracks what is in `main`:
 - [x] Static file server and the agency web app shell (pages, scripts, design tokens, fonts)
 - [x] Database layer and accounts (sign up, log in, sessions, user and admin roles)
 - [ ] Agency web app: clients, buyer questions, scans and answers
-- [ ] Fixes, approvals and the Xo assistant
+- [x] Xo assistant and approvals: scripted replies, drafts with placeholders, owner approval and export
+- [ ] Fixes and workspace settings
 - [ ] White-label client reports
 - [ ] Account, team and admin pages
 

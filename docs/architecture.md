@@ -110,3 +110,14 @@ Services and routes throw `HttpError` (or one of the helpers in `src/server/lib/
 - `tests/integration`: the real app on a random port, called over HTTP with `tests/helpers/server.js`.
 
 CI (`.github/workflows/ci.yml`) runs lint and format checks, the tests on Node.js 22 and 24, and builds the Docker image and calls `/api/health` inside it.
+
+## Xo, the assistant panel
+
+`003_xo.sql` adds the tables behind the chat panel, again with a `workspace_id` on each:
+
+- `xo_conversations` and `xo_messages`: a chat belongs to one person, so the history shows only their own chats. A chat closes after 40 messages.
+- `xo_artifacts`, `xo_artifact_versions` and `xo_artifact_events`: the drafts Xo prepares, one row per version, and the history shown under a draft. Placeholders are not stored; they are read from the code (`FILL_IN_NAME`), so a draft is complete exactly when none are left.
+- `xo_approvals`: a request names one version and the SHA-256 of its content. A decision must send the hash the person reviewed; if the draft changed since, or the request was already decided, nothing is written and the answer is `409 stale_approval`. Editing a draft marks its open requests stale and opens a new one.
+- `xo_cards`: the scan and draft cards shown in a chat.
+
+Replies are scripted (`src/server/services/xo/replies.js`): a message is matched to an intent by keyword and the reply is filled in from the workspace's own data, so no request leaves the server and every number is grounded. A turn is prepared in one transaction (`chat-service.js`) and returned as a list of events; the route (`routes/xo.js`) sends them as server-sent events with a pause between words. Drafts (`drafts.js`) are built from the client record and leave any fact the record does not hold as a placeholder. Only a workspace owner approves or rejects; anyone in the workspace can edit. Xaeo never changes a client's site: an approved draft is exported, and the person ships it.

@@ -113,7 +113,7 @@ Ends the current session and clears the cookie. `204`, also when there was no se
 
 ### `GET /api/app/me` (signed in)
 
-Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`.
+Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`. `xo` is `true`: the web app shows Xo's panel and the Approvals page only when it is set.
 
 ```json
 {
@@ -129,6 +129,7 @@ Everything the web app needs to start: the user with their role in the workspace
     { "id": "chatgpt", "name": "ChatGPT" },
     { "id": "claude", "name": "Claude" }
   ],
+  "xo": true,
   "engineStatus": {
     "mode": "sample",
     "engines": [
@@ -377,3 +378,67 @@ Stops a queued or running scan and keeps the answers already stored. `409` once 
 ### `POST /api/app/scans/:id/retry` (signed in)
 
 Starts a failed or cancelled scan again from the first answer, replacing its stored answers. `409` when the scan cannot be retried or the client already has one in progress. A scan that was running when the server restarted is marked `failed` at start-up and can be retried.
+
+## Xo, the assistant panel
+
+Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.
+
+### `POST /api/app/xo/turn` (signed in)
+
+Sends one message and streams the reply as server-sent events (`text/event-stream`). Body: `{ "text": "...", "conversationId": 4, "uiState": { "clientId": "7" } }`. `text` is 1 to 4000 characters; leave out `conversationId` to start a chat; `uiState.clientId` says which client "this client" means, and otherwise the newest active client is used. The events, in order:
+
+| Event     | Data                        | Meaning                                                    |
+| --------- | --------------------------- | ---------------------------------------------------------- |
+| `start`   | `{ conversationId }`        | The chat the message went to                               |
+| `tool`    | `{ id, label, phase, ok? }` | A step Xo shows as it works; `phase` is `start` then `end` |
+| `text`    | `{ delta }`                 | The next words of the reply                                |
+| `card`    | `{ card }`                  | A scan or draft card to show under the reply               |
+| `ui`      | `{ hash }`                  | A route the app should open, such as `#/clients/7/answers` |
+| `refresh` | `{}`                        | Something changed that the open page should reload         |
+| `done`    | `{ grounding, stopReason }` | The reply is complete                                      |
+
+Errors before the stream starts are normal JSON errors: 422 for a bad body, 404 for a chat that is not yours, 409 `conversation_closed` once a chat holds 40 messages.
+
+### `GET /api/app/xo/conversations` (signed in)
+
+The signed-in person's chats, most recently active first: `{ conversations: [{ id, title, status, updatedAt }] }`. `status` is `open` or `closed`; times are milliseconds since the epoch.
+
+### `GET /api/app/xo/conversations/:id` (signed in)
+
+One chat for the panel to redraw: `{ conversation, messages, cards }`. A card carries the time it was made, so the panel can place it after the reply it belongs to. Another person's chat is a 404.
+
+### `GET /api/app/xo/suggestions` (signed in)
+
+The chips in the empty panel: `{ suggestions: [{ label, message } | { label, hash }] }`. A `message` chip sends that text; a `hash` chip opens that route. Optional query `clientId`.
+
+### `GET /api/app/xo/usage` (signed in)
+
+`{ blocked: null, rateLimit: null }`. Scripted replies have no allowance, so nothing is ever limited; the panel reads this to decide whether to close its composer.
+
+### `GET /api/app/xo/approvals` (signed in)
+
+The approvals queue: `{ approvals, pendingCount, client }`. Query `status` is `pending` (default), `approved`, `rejected`, `stale` or `all`; `clientId` narrows to one client and fills `client`. Each approval is `{ id, artifactId, status, kind, title, requestedAt, clientName, card }`, newest first; an edited draft has an older `stale` request next to its current one. `pendingCount` counts the whole workspace, whatever the filter.
+
+### `POST /api/app/xo/approvals/:id/decide` (signed in, workspace owner)
+
+Approves or rejects one request. Body: `{ "decision": "approve" | "reject", "contentHash": "<sha-256 of the reviewed content>" }`. Answers `{ card }`. `403` for a member, `404` for a request in another workspace, `409 stale_approval` when the request was already decided, the draft was edited, or the hash does not match what is stored, and `409 approve_blocked` when approval is not possible yet (placeholders left, invalid JSON, Xaeo or Xo branding in the code).
+
+### `GET /api/app/xo/artifacts/:id` (signed in)
+
+One draft for the drawer: `{ card, versions, audit }`. `versions` lists each saved version with its content hash; `audit` is the history of who drafted, edited, approved or exported which version, oldest first.
+
+### `POST /api/app/xo/artifacts/:id/edit` (signed in)
+
+Saves a new version. Body: `{ "version": 1, "title": "...", "code": "...", "fill": { "FILL_IN_PHONE": "..." } }`; only `version` is required and it must be the current one (`409 stale_approval` otherwise). `fill` replaces placeholders, escaped for JSON drafts. Answers `{ card, artifact: { version }, staleApprovalIds }`: the earlier open requests go stale and a new one is opened. An edit that changes nothing saves nothing.
+
+### `POST /api/app/xo/artifacts/:id/apply` (signed in)
+
+Marks an approved draft as exported. Body: `{ "approvalId": 12 }`, which must be the approved request for the current version (`409 stale_approval` otherwise). Safe to repeat. Answers `{ card, downloadPath }`. Xaeo does not change the client's site; the person copies or downloads the code and ships it.
+
+### `GET /api/app/xo/artifacts/:id/download` (signed in)
+
+The approved draft as a file attachment, named after the client's domain (`llms.txt` for an llms.txt draft). `400` until the draft is approved.
+
+### `POST /api/app/xo/cards/:id/dismiss` (signed in)
+
+"Not now" on a scan card in a chat. `:id` is the `cardId` the card carries (`card-12`). Answers `{ card }` with the card in its `dismissed` state. `409 card_not_open` when the card was already answered, `404` for a draft card or a card in another workspace.

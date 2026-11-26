@@ -22,7 +22,8 @@ export function getOnboarding(db, workspaceId) {
 /**
  * What the web app needs to start: who is signed in, their workspace, which engines answer and how
  * far through the first-run checklist the workspace is. Answers come from the sample engine, so the
- * engine bar says "Sample data".
+ * engine bar says "Sample data". `xo` is true because Xo, the assistant panel, is part of this build:
+ * the web app shows the panel, the Approvals page and their shortcuts only when it is set.
  * @param {{ user: { id: number, email: string, name: string, role: string }, workspace: { id: number, name: string, role: string } }} session
  * @param {import('node:sqlite').DatabaseSync} db
  */
@@ -33,6 +34,7 @@ export function getAppContext({ user, workspace }, db) {
     user: { ...user, workspaceRole: workspace.role },
     workspace: { id: workspace.id, name: workspace.name, timezone: DEFAULT_TIMEZONE },
     engines,
+    xo: true,
     engineStatus: {
       mode: 'sample',
       engines: engines.map((engine) => ({ ...engine, state: 'sample' })),

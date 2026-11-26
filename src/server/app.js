@@ -15,6 +15,8 @@ import { createStatsService } from './services/stats-service.js';
 import { createSampleEngines } from './services/engines/sample-engine.js';
 import { loadAnswerSet } from './services/engines/sample-answers.js';
 import { createScanRunner } from './services/scans/scan-runner.js';
+import { createArtifactService } from './services/xo/artifact-service.js';
+import { createChatService } from './services/xo/chat-service.js';
 
 const { version } = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
@@ -27,8 +29,9 @@ const DEFAULT_WEB_ROOT = fileURLToPath(new URL('../web', import.meta.url));
  * return a value (sent as 200 JSON), return `{ status, body }`, or write to `ctx.res` themselves.
  * Requests that match no route and are not under `/api` fall through to the static files in `webRoot`.
  * Scans run inside this process, asking the sample engines; `scanStepDelayMs` is the pause before
- * each answer, so the web app's progress state is visible (tests pass 0).
- * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger>, db: import('node:sqlite').DatabaseSync, webRoot?: string, scanStepDelayMs?: number }} deps
+ * each answer, so the web app's progress state is visible (tests pass 0). `xoWordDelayMs` is the pause
+ * between the words of one of Xo's replies, for the same reason.
+ * @param {{ config: ReturnType<import('./config.js').loadConfig>, logger: ReturnType<import('./lib/logger.js').createLogger>, db: import('node:sqlite').DatabaseSync, webRoot?: string, scanStepDelayMs?: number, xoWordDelayMs?: number }} deps
  */
 export function createApp({
   config,
@@ -36,6 +39,7 @@ export function createApp({
   db,
   webRoot = DEFAULT_WEB_ROOT,
   scanStepDelayMs = 300,
+  xoWordDelayMs = 25,
 }) {
   const auth = createAuthService({ db, sessionTtlMs: config.sessionTtlMs });
   const sessionHttp = createSessionHttp({ auth, config });
@@ -43,6 +47,13 @@ export function createApp({
   const answerService = createAnswerService({ db });
   const statsService = createStatsService({ db });
   const answerSet = loadAnswerSet();
+  const artifactService = createArtifactService({ db });
+  const chatService = createChatService({
+    db,
+    clientService,
+    artifactService,
+    competitors: answerSet.competitors,
+  });
   const scanRunner = createScanRunner({
     db,
     engines: createSampleEngines(answerSet),
@@ -69,6 +80,9 @@ export function createApp({
     answerService,
     statsService,
     scanRunner,
+    artifactService,
+    chatService,
+    xoWordDelayMs,
     loginLimiter,
     staticFiles,
   });
