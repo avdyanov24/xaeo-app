@@ -92,8 +92,9 @@ src/
     config.js       environment configuration
     http/           router, body parsing, response helpers, static files
     lib/            errors, logger, input validation
-    routes/         HTTP handlers (health and pages today)
-    services/       business logic
+    db/             SQLite connection, migrations and seed steps
+    routes/         HTTP handlers (health, pages, accounts, clients, questions, scans, answers, engines)
+    services/       business logic; services/engines for the engine interface, services/scans for the scan runner and state machine
     repositories/   SQL only
   web/              the browser UI, served as static files
 tests/
@@ -103,7 +104,7 @@ tests/
 Dockerfile, compose.yaml    container build and local run
 ```
 
-The database layer (`src/server/db/`), the web app files and the seed data arrive with the milestones above, so some folders hold only a README until then. Read the tree rather than trusting this list when in doubt.
+Later milestones add Xo, fixes, reports and the admin area, so some folders hold only a README until then. Read the tree rather than trusting this list when in doubt.
 
 ## Commands
 
