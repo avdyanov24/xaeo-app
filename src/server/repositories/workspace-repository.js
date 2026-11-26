@@ -5,6 +5,7 @@ export function insertWorkspace(db, name) {
   return Number(db.prepare('INSERT INTO workspaces (name) VALUES (?)').run(name).lastInsertRowid);
 }
 
+/** Adds a user to a workspace with a role (owner or member); a pair can be added only once. */
 export function insertMembership(db, { workspaceId, userId, role }) {
   db.prepare('INSERT INTO memberships (workspace_id, user_id, role) VALUES (?, ?, ?)').run(
     workspaceId,
