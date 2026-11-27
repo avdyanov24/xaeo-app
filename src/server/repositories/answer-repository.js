@@ -116,6 +116,28 @@ export function listAnswers(db, workspaceId, scanId) {
 }
 
 /**
+ * The answers of several scans in one query, for pages that set scans side by side.
+ * @param {number[]} scanIds
+ * @returns {Map<number, AnswerRow[]>} by scan id, each list in the order collected; a scan with no answers is not in the map
+ */
+export function listAnswersByScans(db, workspaceId, scanIds) {
+  const bySca = new Map();
+  if (!scanIds.length) return bySca;
+  const marks = scanIds.map(() => '?').join(', ');
+  const rows = db
+    .prepare(
+      `SELECT ${COLUMNS} FROM answers WHERE workspace_id = ? AND scan_id IN (${marks}) ORDER BY id`,
+    )
+    .all(workspaceId, ...scanIds)
+    .map(toAnswer);
+  for (const row of rows) {
+    if (!bySca.has(row.scanId)) bySca.set(row.scanId, []);
+    bySca.get(row.scanId).push(row);
+  }
+  return bySca;
+}
+
+/**
  * Totals for one scan: answers that came back, how many of those name the client, and failures.
  * @returns {{ ok: number, mentioned: number, failed: number }}
  */
@@ -129,6 +151,21 @@ export function scanTotals(db, workspaceId, scanId) {
     )
     .get(workspaceId, scanId);
   return { ok: row.ok, mentioned: row.mentioned, failed: row.failed };
+}
+
+/**
+ * One scan's totals split by engine. An engine that returned no answers has no row.
+ * @returns {{ engine: string, ok: number, mentioned: number }[]}
+ */
+export function scanEngineTotals(db, workspaceId, scanId) {
+  return db
+    .prepare(
+      `SELECT engine, coalesce(sum(status = 'ok'), 0) AS ok,
+              coalesce(sum(status = 'ok' AND mentioned = 1), 0) AS mentioned
+       FROM answers WHERE workspace_id = ? AND scan_id = ? GROUP BY engine ORDER BY engine`,
+    )
+    .all(workspaceId, scanId)
+    .map(({ engine, ok, mentioned }) => ({ engine, ok, mentioned }));
 }
 
 /** Removes a scan's answers, used when the scan is retried from the start. */

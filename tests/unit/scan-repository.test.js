@@ -152,6 +152,38 @@ describe('answer repository', () => {
     assert.deepEqual(answers.scanTotals(db, ws, 9999), { ok: 0, mentioned: 0, failed: 0 });
   });
 
+  it("splits a scan's totals by engine and leaves out engines with no answers", () => {
+    const scanId = newScan();
+    const add = (engine, fields) =>
+      answers.insertAnswer(db, { ...base(), scanId, engine, ...fields });
+    add('chatgpt', { status: 'ok', mentioned: false });
+    add('claude', { status: 'ok', mentioned: true });
+    assert.deepEqual(answers.scanEngineTotals(db, ws, scanId), [
+      { engine: 'chatgpt', ok: 1, mentioned: 0 },
+      { engine: 'claude', ok: 1, mentioned: 1 },
+    ]);
+    assert.deepEqual(answers.scanEngineTotals(db, ws, 9999), []);
+  });
+
+  it('reads the answers of several scans at once, grouped by scan and scoped to the workspace', () => {
+    const first = newScan();
+    const second = newScan();
+    const empty = newScan();
+    answers.insertAnswer(db, { ...base(), scanId: first, engine: 'chatgpt', status: 'ok' });
+    answers.insertAnswer(db, { ...base(), scanId: first, engine: 'claude', status: 'ok' });
+    answers.insertAnswer(db, { ...base(), scanId: second, engine: 'chatgpt', status: 'ok' });
+    const grouped = answers.listAnswersByScans(db, ws, [first, second, empty]);
+    assert.deepEqual(
+      [...grouped].map(([id, rows]) => [id, rows.map((row) => row.engine)]),
+      [
+        [first, ['chatgpt', 'claude']],
+        [second, ['chatgpt']],
+      ],
+    );
+    assert.equal(answers.listAnswersByScans(db, ws, []).size, 0);
+    assert.equal(answers.listAnswersByScans(db, other, [first, second]).size, 0);
+  });
+
   it('allows one answer per question and engine in a scan until the scan is cleared', () => {
     const scanId = newScan();
     const add = () =>

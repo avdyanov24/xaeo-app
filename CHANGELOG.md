@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - The clients list failed to draw ("We couldn't load your clients") because client rows had no `nextAction`. `GET /api/app/clients` rows now carry `history`, `delta` and `nextAction`.
+- The client overview failed to draw because `GET /api/app/clients/:id` lacked the fields it reads. The detail now carries `engines`, `kpis`, `competitors`, `sources`, `comparison`, `changes`, `topFix`, `estimate`, `doneMarkers` and more. Its `scans` list only finished scans, oldest first, with times in milliseconds.
 
 ## [0.1.0] - 2026-11-17
 

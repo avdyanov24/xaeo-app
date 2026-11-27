@@ -1,0 +1,125 @@
+/**
+ * The numbers on a client's overview page, worked out from one scan's answers. Pure functions over
+ * answer rows (see answer-repository.js), so every rule is easy to test.
+ *
+ * @typedef {import('../repositories/answer-repository.js').AnswerRow} AnswerRow
+ */
+
+import { ENGINES } from './engines/engine.js';
+
+/** Answers that came back; a failed answer carries no text and counts towards nothing. */
+const returned = (rows) => rows.filter((row) => row.status === 'ok');
+
+/** Rounds to one decimal and drops a trailing `.0`, so an average of 2 reads `2`, not `2.0`. */
+const oneDecimal = (value) => Number(value.toFixed(1));
+
+/**
+ * Counts how often each business is named in the answers, most named first. Names are matched
+ * ignoring case and the first spelling seen is kept. A business named twice in one answer counts once.
+ * @param {AnswerRow[]} rows
+ * @returns {{ name: string, count: number }[]} ties keep the order the names were first seen
+ */
+export function competitorsOf(rows) {
+  const counts = new Map();
+  for (const row of returned(rows)) {
+    const seen = new Set();
+    for (const name of row.competitors) {
+      const key = name.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      const entry = counts.get(key) ?? { name: name.trim(), count: 0 };
+      entry.count += 1;
+      counts.set(key, entry);
+    }
+  }
+  return [...counts.values()].sort((a, b) => b.count - a.count);
+}
+
+/**
+ * The four tiles under the headline number.
+ * - `cited`: answers that name the client and cite its own site
+ * - `avgPosition`: where the client usually sits when an answer lists several businesses, or null
+ * - `firstPlace`: answers that list the client first
+ * - `topRival`: the competitor named in most answers, or null when none is named
+ * @param {AnswerRow[]} rows the scan's answers
+ * @param {{ done: number, total: number }} fixes how many fixes are marked done, out of how many
+ */
+export function kpisOf(rows, fixes) {
+  const ok = returned(rows);
+  const positions = ok.filter((row) => row.mentioned && row.position !== null);
+  const [topRival = null] = competitorsOf(rows);
+  return {
+    ok: ok.length,
+    mentioned: ok.filter((row) => row.mentioned).length,
+    cited: ok.filter((row) => row.label === 'Cited').length,
+    avgPosition: positions.length
+      ? oneDecimal(positions.reduce((sum, row) => sum + row.position, 0) / positions.length)
+      : null,
+    firstPlace: positions.filter((row) => row.position === 1).length,
+    topRival,
+    fixesDone: fixes.done,
+    fixesTotal: fixes.total,
+  };
+}
+
+/** True when `host` is the client's domain or one of its subdomains. */
+const isClientHost = (host, domain) => host === domain || host.endsWith(`.${domain}`);
+
+/**
+ * The websites the engines drew on, most cited first. A site cited twice in one answer counts once.
+ * The client's own site (and its subdomains) is marked so the page can set it apart.
+ * @param {AnswerRow[]} rows
+ * @param {string} clientDomain
+ * @returns {{ name: string, kind: 'Client site' | 'Other site', count: number }[]}
+ */
+export function sourcesOf(rows, clientDomain) {
+  const counts = new Map();
+  for (const row of returned(rows)) {
+    for (const host of new Set(row.citations.map((citation) => citation.domain.toLowerCase())))
+      counts.set(host, (counts.get(host) ?? 0) + 1);
+  }
+  return [...counts]
+    .map(([name, count]) => ({
+      name,
+      kind: isClientHost(name, clientDomain.toLowerCase()) ? 'Client site' : 'Other site',
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+const pairKey = (row) => `${row.questionId}:${row.engine}`;
+
+/**
+ * What changed between two scans, looking only at question and engine pairs that returned an answer
+ * both times: an answer that now names the client is `gained`, one that no longer does is `lost`.
+ * `complete` is true when both scans answered the same pairs, so the headline numbers are like for like.
+ * @param {AnswerRow[]} rows the newer scan's answers
+ * @param {AnswerRow[]} previousRows the scan before it
+ */
+export function compareScans(rows, previousRows) {
+  const now = returned(rows);
+  const before = returned(previousRows);
+  const earlier = new Map(before.map((row) => [pairKey(row), row]));
+  const matched = now.filter((row) => earlier.has(pairKey(row)));
+  const describe = (row) => ({
+    answerId: String(row.id),
+    engine: ENGINES[row.engine]?.name ?? row.engine,
+    question: row.questionText,
+  });
+  return {
+    comparison: {
+      matchedPairs: matched.length,
+      previousOk: before.length,
+      currentOk: now.length,
+      complete: matched.length === now.length && matched.length === before.length,
+    },
+    changes: {
+      gained: matched
+        .filter((row) => row.mentioned && !earlier.get(pairKey(row)).mentioned)
+        .map(describe),
+      lost: matched
+        .filter((row) => !row.mentioned && earlier.get(pairKey(row)).mentioned)
+        .map(describe),
+    },
+  };
+}
