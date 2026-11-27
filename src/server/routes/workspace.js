@@ -1,7 +1,7 @@
-import { readJson } from '../http/body.js';
+import { readBuffer, readJson } from '../http/body.js';
 import { validate } from '../lib/validate.js';
 import { getAppContext } from '../services/app-service.js';
-import { DEFAULT_BRAND_COLOR } from '../services/workspace-service.js';
+import { DEFAULT_BRAND_COLOR, MAX_LOGO_BYTES } from '../services/workspace-service.js';
 
 const BRAND = {
   name: { type: 'string', required: true, min: 1, max: 100 },
@@ -10,7 +10,10 @@ const BRAND = {
   contact: { type: 'string', max: 200, default: '' },
 };
 
-/** The agency's own settings. Changing them is for workspace owners. */
+/** The media type of a request: the header without parameters such as `; charset=utf-8`. */
+const mediaType = (req) => (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+
+/** The agency's brand and logo. Reading the logo is for any member, changing anything is for owners. */
 export function registerWorkspaceRoutes(router, { sessionHttp, workspaceService, db }) {
   // Settings answers with the app context, so the page can refresh what it keeps from /api/app/me.
   const context = (ctx) => getAppContext(ctx.session, db);
@@ -24,6 +27,39 @@ export function registerWorkspaceRoutes(router, { sessionHttp, workspaceService,
         color: input.color.toUpperCase(),
       });
       return context(ctx);
+    }),
+  );
+
+  router.post(
+    '/api/app/brand/logo',
+    sessionHttp.requireOwner(async (ctx) => {
+      const data = await readBuffer(ctx.req, { limit: MAX_LOGO_BYTES });
+      workspaceService.setLogo(ctx.session.workspace.id, { data, type: mediaType(ctx.req) });
+      return context(ctx);
+    }),
+  );
+
+  router.post(
+    '/api/app/brand/logo/delete',
+    sessionHttp.requireOwner((ctx) => {
+      workspaceService.removeLogo(ctx.session.workspace.id);
+      return context(ctx);
+    }),
+  );
+
+  // The file is sent with a policy that blocks scripts, so an SVG opened directly cannot run any.
+  router.get(
+    '/api/app/brand/logo',
+    sessionHttp.requireUser((ctx) => {
+      const { data, type } = workspaceService.logo(ctx.session.workspace.id);
+      ctx.res.writeHead(200, {
+        'Content-Type': type,
+        'Content-Length': data.length,
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        // The URL carries the upload time, so a new logo is a new URL and an old one can be kept.
+        'Cache-Control': 'private, max-age=86400',
+      });
+      ctx.res.end(ctx.req.method === 'HEAD' ? undefined : data);
     }),
   );
 }

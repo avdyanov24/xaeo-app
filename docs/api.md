@@ -469,6 +469,18 @@ The agency's own name, brand and time zone. Anyone in the workspace can read the
 
 Saves the agency name and the brand shown on reports. Body: `name` (1 to 100 characters), `color` (`#RRGGBB`, default `#1F3BFF`), `website` and `contact` (up to 200 characters each, default empty). Answers with the same document as `GET /api/app/me`. `422` lists invalid fields.
 
+### `POST /api/app/brand/logo` (signed in, workspace owner)
+
+Uploads the logo. The body is the image itself, not JSON: send the file with `Content-Type: image/png`, `image/jpeg` or `image/svg+xml`, up to 300 KB. The bytes must be that kind of image (the type in the header is not taken on trust), and an SVG that carries script or embedded content is refused. Replaces any earlier logo and answers with the same document as `GET /api/app/me`, whose `workspace.logo` is the new URL. `413` over 300 KB, `415` for another type, `422` when the bytes are not that image or the body is empty.
+
+### `POST /api/app/brand/logo/delete` (signed in, workspace owner)
+
+Removes the logo and answers with the same document as `GET /api/app/me`. Safe to repeat.
+
+### `GET /api/app/brand/logo` (signed in)
+
+The logo file, with the type it was uploaded as. It is sent with `Content-Security-Policy: default-src 'none'; sandbox`, so an SVG opened directly cannot run script. The URL in `workspace.logo` ends in `?v=<upload time>`, so a new logo is a new URL. `404` when the workspace has no logo.
+
 ## Xo, the assistant panel
 
 Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.
