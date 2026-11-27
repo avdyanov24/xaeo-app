@@ -93,8 +93,10 @@ describe('scan routes', () => {
     assert.equal(withScan.status, 201);
     assert.equal(withScan.json.scanNote, undefined);
     const { json: client } = await call('GET', `/api/app/clients/${withScan.json.id}`);
-    assert.deepEqual(client.scans, []);
-    await settle(client.running.id);
+    // The scan is `running` until it finishes, and then it is the one entry in `scans`.
+    const first = client.running ?? client.scans[0];
+    assert.equal(Number(Boolean(client.running)) + client.scans.length, 1);
+    await settle(first.id);
 
     const noQuestions = await call('POST', '/api/app/clients', {
       name: 'Empty Co',
