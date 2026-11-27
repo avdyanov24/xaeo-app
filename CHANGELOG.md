@@ -38,6 +38,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Routes for clients (list, create, edit, archive, the sample client), questions, scans (start, poll, cancel, retry), answers, `GET /api/app/engines` and `GET /api/app/stats`, all scoped to the signed-in workspace.
 - In-process scan runner: a scan goes from queued to running to done over about three seconds, and one that was still running when the server stopped is marked failed on start-up so it can be retried.
 - The first-run checklist state in `GET /api/app/me`.
+- Fixes: the ranked list for a client with evidence, badges and a progress estimate, marking a fix done, set aside or reopened, and Northside Plumbing's four sample fixes (`GET /api/app/clients/:id/fixes`, `POST /api/app/fixes/:id/status`). Comparing saved website observations (`POST /api/app/fixes/:id/verify`) is owner-only and refuses every request, because no website observations are saved.
+- CSV handoff for fixes: an RFC 4180 download that defuses spreadsheet formulas, and a record of which fixes were exported and which changed since.
+- Agency brand, logo (PNG, JPEG or SVG up to 300 KB, checked by content) and workspace time zone, owner-only, shown in `GET /api/app/me`.
+- `GET /api/app/export`: the workspace's brand, members, clients, questions, scans, answers and fixes as one JSON file, without passwords or session tokens.
+- `GET /api/app/suggest`: starting buyer questions for a new client, from fixed templates.
+- Client deletion: owners request it for an archived client, which is deleted seven days later unless cancelled or unarchived.
+- `requireOwner` route guard.
 
 ## [0.1.0] - 2026-11-17
 
