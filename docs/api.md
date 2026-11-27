@@ -162,6 +162,7 @@ The workspace's clients, newest first. `?archived=1` lists archived clients inst
       "weekly": true,
       "nextRunAt": "2026-12-03T10:00:00.000Z",
       "questions": 5,
+      "fixes": { "todo": 3, "done": 1, "wont": 0, "total": 4 },
       "runningId": null,
       "latest": {
         "id": 1,
@@ -177,7 +178,7 @@ The workspace's clients, newest first. `?archived=1` lists archived clients inst
 }
 ```
 
-`latest` is the newest finished scan, or `null`. `runningId` is the id of the scan in progress, or `null`.
+`fixes` counts the client's fixes by status (see [Fixes](#fixes)). `latest` is the newest finished scan, or `null`. `runningId` is the id of the scan in progress, or `null`.
 
 ### `POST /api/app/clients` (signed in)
 

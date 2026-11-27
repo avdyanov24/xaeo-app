@@ -2,6 +2,7 @@ import { transaction } from '../db/database.js';
 import { conflict, notFound, validationFailed } from '../lib/errors.js';
 import * as answers from '../repositories/answer-repository.js';
 import * as clients from '../repositories/client-repository.js';
+import * as fixes from '../repositories/fix-repository.js';
 import * as questions from '../repositories/question-repository.js';
 import * as scans from '../repositories/scan-repository.js';
 
@@ -27,8 +28,8 @@ export function normalizeDomain(input) {
 }
 
 /**
- * The client as the web app lists it: its details, how many questions it asks, the scan in
- * progress (if any) and the totals of the latest finished scan.
+ * The client as the web app lists it: its details, how many questions it asks, how its fixes
+ * stand, the scan in progress (if any) and the totals of the latest finished scan.
  */
 function summarize(db, client) {
   const active = scans.findActiveScan(db, client.workspaceId, client.id);
@@ -47,6 +48,7 @@ function summarize(db, client) {
     weekly: client.nextRunAt !== null,
     nextRunAt: client.nextRunAt,
     questions: questions.listQuestions(db, client.workspaceId, client.id).length,
+    fixes: fixes.countFixes(db, client.workspaceId, client.id),
     runningId: active?.id ?? null,
     latest: latest
       ? {

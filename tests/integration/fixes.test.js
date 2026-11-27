@@ -125,4 +125,21 @@ describe('fix routes', () => {
     });
     assert.equal(noCondition.status, 422);
   });
+
+  it('counts the fixes on the client, so the tabs and the list show how many are open', async (t) => {
+    const { call, sample } = await setup(t);
+    const counts = { todo: 3, done: 1, wont: 0, total: 4 };
+    assert.deepEqual((await call('GET', `/api/app/clients/${sample}`)).json.fixes, counts);
+    const listed = (await call('GET', '/api/app/clients')).json.clients;
+    assert.deepEqual(listed[0].fixes, counts);
+
+    const { json } = await call('GET', `/api/app/clients/${sample}/fixes`);
+    await call('POST', `/api/app/fixes/${json.fixes[1].id}/status`, { status: 'wont' });
+    assert.deepEqual((await call('GET', `/api/app/clients/${sample}`)).json.fixes, {
+      todo: 2,
+      done: 1,
+      wont: 1,
+      total: 4,
+    });
+  });
 });
