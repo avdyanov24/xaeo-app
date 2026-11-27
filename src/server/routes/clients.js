@@ -38,7 +38,10 @@ export function idParam(params, name = 'id') {
 }
 
 /** Clients, the archive and the example client. */
-export function registerClientRoutes(router, { sessionHttp, clientService, scanRunner, db }) {
+export function registerClientRoutes(
+  router,
+  { sessionHttp, clientService, clientOverview, scanRunner, db },
+) {
   const route = (handler) =>
     sessionHttp.requireUser((ctx) => handler(ctx, ctx.session.workspace.id));
 
@@ -74,7 +77,9 @@ export function registerClientRoutes(router, { sessionHttp, clientService, scanR
 
   router.get(
     '/api/app/clients/:id',
-    route((ctx, workspaceId) => clientService.get(workspaceId, idParam(ctx.params))),
+    route((ctx, workspaceId) =>
+      clientOverview.extend(workspaceId, clientService.get(workspaceId, idParam(ctx.params))),
+    ),
   );
 
   // The web app saves edits with POST, so both verbs are accepted.
