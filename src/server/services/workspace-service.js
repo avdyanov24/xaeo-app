@@ -1,6 +1,9 @@
 import { badRequest, notFound, unsupportedMediaType, validationFailed } from '../lib/errors.js';
 import * as workspaces from '../repositories/workspace-repository.js';
 
+/** The brand colour a workspace has until its owner picks one: the colour of the app itself. */
+export const DEFAULT_BRAND_COLOR = '#1F3BFF';
+
 /** Logos are shown on reports, so they are small files in formats every browser draws. */
 export const MAX_LOGO_BYTES = 300 * 1024;
 export const LOGO_TYPES = Object.freeze(['image/png', 'image/jpeg', 'image/svg+xml']);

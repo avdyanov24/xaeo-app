@@ -2,17 +2,23 @@ import * as clients from '../repositories/client-repository.js';
 import * as questions from '../repositories/question-repository.js';
 import * as workspaces from '../repositories/workspace-repository.js';
 import { ENGINES } from './engines/engine.js';
-import { publicWorkspace } from './workspace-service.js';
+import { DEFAULT_BRAND_COLOR, publicWorkspace } from './workspace-service.js';
 
 /**
- * The first-run checklist on the clients list. `brand` and `report` turn true when branding and
- * reports exist; until then they stay false and the checklist keeps those steps open.
+ * The first-run checklist on the clients list. `brand` turns true once the owner has set any part of
+ * the brand (logo, colour, website or contact line), and `report` when reports exist; until then
+ * they stay false and the checklist keeps those steps open.
  */
 export function getOnboarding(db, workspaceId) {
+  const brand = workspaces.findWorkspaceSettings(db, workspaceId);
   return {
     client: clients.listClients(db, workspaceId).length > 0,
     questions: questions.hasActiveQuestions(db, workspaceId),
-    brand: false,
+    brand:
+      brand.hasLogo ||
+      brand.website !== '' ||
+      brand.contact !== '' ||
+      brand.color !== DEFAULT_BRAND_COLOR,
     report: false,
   };
 }

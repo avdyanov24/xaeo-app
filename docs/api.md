@@ -113,7 +113,7 @@ Ends the current session and clears the cookie. `204`, also when there was no se
 
 ### `GET /api/app/me` (signed in)
 
-Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`. `xo` is `true`: the web app shows Xo's panel and the Approvals page only when it is set.
+Everything the web app needs to start: the user with their role in the workspace, the workspace with its brand and time zone, and the engines. `workspace.logo` is a URL (see [`GET /api/app/brand/logo`](#get-apiappbrandlogo-signed-in)) or `null`. Answers come from the sample engine, so `engineStatus.mode` is `sample`. `xo` is `true`: the web app shows Xo's panel and the Approvals page only when it is set.
 
 ```json
 {
@@ -124,7 +124,15 @@ Everything the web app needs to start: the user with their role in the workspace
     "role": "user",
     "workspaceRole": "owner"
   },
-  "workspace": { "id": 1, "name": "Brightline Digital", "timezone": "Europe/London" },
+  "workspace": {
+    "id": 1,
+    "name": "Brightline Digital",
+    "color": "#1F3BFF",
+    "website": "",
+    "contact": "",
+    "timezone": "Europe/London",
+    "logo": null
+  },
   "engines": [
     { "id": "chatgpt", "name": "ChatGPT" },
     { "id": "claude", "name": "Claude" }
@@ -141,7 +149,7 @@ Everything the web app needs to start: the user with their role in the workspace
 }
 ```
 
-`onboarding` drives the first-run checklist on the clients list: `client` is true once the workspace has an active client, `questions` once an active client has a question switched on. `brand` and `report` stay `false` until branding and reports exist.
+`onboarding` drives the first-run checklist on the clients list: `client` is true once the workspace has an active client, `questions` once an active client has a question switched on. `brand` is true once the owner has set a logo, a colour other than the default, a website or a contact line; `report` stays `false` until reports exist.
 
 ### `GET /api/app/clients` (signed in)
 
@@ -452,6 +460,14 @@ Which fixes have been exported: `{ "handoffs": [{ "fixId": "1", "csv": { "state"
 ### `POST /api/app/clients/:id/handoffs` (signed in)
 
 Records that fixes went into an export. Body: `{ "fixIds": ["1", "2"], "channel": "csv" }`, one to 100 ids as the Fixes view has them. Answers `{ "recorded": 2 }`. Repeated ids count once. `404` when any id is not this client's fix, and then nothing is recorded; `422` for a malformed list.
+
+## Workspace settings
+
+The agency's own name, brand and time zone. Anyone in the workspace can read them (they arrive in `GET /api/app/me`); changing them is for the workspace owner, and a member gets `403`.
+
+### `POST /api/app/brand` (signed in, workspace owner)
+
+Saves the agency name and the brand shown on reports. Body: `name` (1 to 100 characters), `color` (`#RRGGBB`, default `#1F3BFF`), `website` and `contact` (up to 200 characters each, default empty). Answers with the same document as `GET /api/app/me`. `422` lists invalid fields.
 
 ## Xo, the assistant panel
 

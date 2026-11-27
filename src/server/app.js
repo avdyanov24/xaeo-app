@@ -13,6 +13,7 @@ import { createAuthService } from './services/auth-service.js';
 import { createClientService } from './services/client-service.js';
 import { createFixExportService } from './services/fixes/fix-export.js';
 import { createFixService } from './services/fixes/fix-service.js';
+import { createWorkspaceService } from './services/workspace-service.js';
 import { createStatsService } from './services/stats-service.js';
 import { createSampleEngines } from './services/engines/sample-engine.js';
 import { loadAnswerSet } from './services/engines/sample-answers.js';
@@ -50,6 +51,7 @@ export function createApp({
   const statsService = createStatsService({ db });
   const fixService = createFixService({ db });
   const fixExportService = createFixExportService({ db });
+  const workspaceService = createWorkspaceService({ db });
   const answerSet = loadAnswerSet();
   const artifactService = createArtifactService({ db });
   const chatService = createChatService({
@@ -84,6 +86,7 @@ export function createApp({
     answerService,
     fixService,
     fixExportService,
+    workspaceService,
     statsService,
     scanRunner,
     artifactService,
