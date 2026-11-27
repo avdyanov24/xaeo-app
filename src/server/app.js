@@ -11,6 +11,7 @@ import { registerRoutes } from './routes/index.js';
 import { createAnswerService } from './services/answer-service.js';
 import { createAuthService } from './services/auth-service.js';
 import { createClientService } from './services/client-service.js';
+import { createFixService } from './services/fixes/fix-service.js';
 import { createStatsService } from './services/stats-service.js';
 import { createSampleEngines } from './services/engines/sample-engine.js';
 import { loadAnswerSet } from './services/engines/sample-answers.js';
@@ -46,6 +47,7 @@ export function createApp({
   const clientService = createClientService({ db });
   const answerService = createAnswerService({ db });
   const statsService = createStatsService({ db });
+  const fixService = createFixService({ db });
   const answerSet = loadAnswerSet();
   const artifactService = createArtifactService({ db });
   const chatService = createChatService({
@@ -78,6 +80,7 @@ export function createApp({
     sessionHttp,
     clientService,
     answerService,
+    fixService,
     statsService,
     scanRunner,
     artifactService,

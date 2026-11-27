@@ -379,6 +379,67 @@ Stops a queued or running scan and keeps the answers already stored. `409` once 
 
 Starts a failed or cancelled scan again from the first answer, replacing its stored answers. `409` when the scan cannot be retried or the client already has one in progress. A scan that was running when the server restarted is marked `failed` at start-up and can be retried.
 
+## Fixes
+
+A fix is ranked work that follows from missed answers: a page to publish, structured data to add, copy to change. Fix ids are strings. Marking a fix done records what the agency says; nothing here fetches or checks the client's website.
+
+### `GET /api/app/clients/:id/fixes` (signed in)
+
+The client's fixes in rank order, with what the Fixes view needs to draw them:
+
+```json
+{
+  "fixes": [
+    {
+      "id": "1",
+      "kind": "fix",
+      "title": "Add LocalBusiness structured data to the home page",
+      "type": "jsonld",
+      "status": "done",
+      "impact": "High",
+      "evidence": "Strong",
+      "url": "https://northsideplumbing.co.uk/",
+      "engines": ["ChatGPT", "Claude"],
+      "why": "...",
+      "code": "...",
+      "lang": "jsonld",
+      "verify": "...",
+      "gain": 1,
+      "doneAt": "2026-11-27T09:00:00.000Z",
+      "evidenceAnswers": [
+        {
+          "id": "9",
+          "engine": "ChatGPT",
+          "question": "...",
+          "label": "Not mentioned",
+          "position": null
+        }
+      ],
+      "postDoneScan": false,
+      "latestAnswers": [],
+      "latestReturned": 0,
+      "nowMentioned": 0,
+      "canVerify": false,
+      "originalObservationId": null,
+      "verification": { "latest": null, "history": [] }
+    }
+  ],
+  "estimate": { "current": 2, "total": 10, "projected": 6 },
+  "allDone": false,
+  "definitions": { "impact": { "High": "..." }, "evidence": { "Strong": "..." } }
+}
+```
+
+`type` is `jsonld`, `page`, `listing`, `copy` or `crawler`; `status` is `todo`, `done` or `wont`; `impact` is `High`, `Medium` or `Low`; `evidence` is `Strong`, `Medium` or `Weak`. `engines` are display names. A done fix is `postDoneScan` once a scan finished after `doneAt`; `latestAnswers`, `latestReturned` and `nowMentioned` then say how the answers it is linked to read in the latest scan. `estimate` is `null` before the first finished scan; `projected` is what the count would be if every open fix, and every done fix not yet measured by a scan, wins back the `gain` answers it is linked to. It is an estimate, never a promise. `allDone` is true when every fix is done. `404` for a client in another workspace.
+
+### `POST /api/app/fixes/:id/status` (signed in)
+
+Body: `{ "status": "todo" | "done" | "wont" }`. Marks the fix done (recording `doneAt`), sets it aside, or reopens it, and answers with the client's fixes as above. Repeating a status changes nothing. `404` for a fix in another workspace, `422` for an unknown status.
+
+### `POST /api/app/fixes/:id/verify` (signed in, workspace owner)
+
+Body: `{ beforeObservationId, afterObservationId, targetUrl, condition: { kind: "title" | "schemaType", value }, reviewed: true }`. Compares two saved website observations for a fix. Xaeo saves no website observations, so no fix has a pair to compare: every well-formed request for an existing fix answers `409`, and `canVerify` stays `false`. `403` for a member, `404` for a fix in another workspace, `422` for a malformed body or `reviewed` not `true`.
+
 ## Xo, the assistant panel
 
 Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.

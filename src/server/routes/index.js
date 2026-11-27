@@ -3,6 +3,7 @@ import { registerAppRoutes } from './app.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerClientRoutes } from './clients.js';
 import { registerEngineRoutes } from './engines.js';
+import { registerFixRoutes } from './fixes.js';
 import { registerHealthRoutes } from './health.js';
 import { registerPageRoutes } from './pages.js';
 import { registerQuestionRoutes } from './questions.js';
@@ -17,6 +18,7 @@ export function registerRoutes(router, deps) {
   registerClientRoutes(router, deps);
   registerAnswerRoutes(router, deps);
   registerEngineRoutes(router, deps);
+  registerFixRoutes(router, deps);
   registerQuestionRoutes(router, deps);
   registerScanRoutes(router, deps);
   registerXoRoutes(router, deps);
