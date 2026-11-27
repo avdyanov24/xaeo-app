@@ -40,6 +40,8 @@ beforeEach(async () => {
   ws = workspaces.insertWorkspace(db, 'Mine');
   ({ id: clientId } = await addSampleClient(db, ws, { now: T0 }));
   baseline = scans.listScans(db, ws, clientId)[0];
+  // These tests build their own fixes; the example client's four would only get in the way.
+  db.prepare('DELETE FROM fixes').run();
   clock = T0 + 60_000;
   service = createFixService({ db, now: () => clock });
 });

@@ -4,6 +4,7 @@ import * as clients from '../repositories/client-repository.js';
 import * as questions from '../repositories/question-repository.js';
 import * as scans from '../repositories/scan-repository.js';
 import { createSampleEngines } from './engines/sample-engine.js';
+import { addSampleFixes } from './fixes/sample-fixes.js';
 import { loadAnswerSet } from './engines/sample-answers.js';
 import { collectAnswer } from './scans/collect.js';
 import { applyEvent, createScan, recordAnswer } from './scans/scan-state.js';
@@ -16,8 +17,9 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 /**
  * Adds the Northside Plumbing example client to a workspace, with its five questions and a
  * finished first scan of ten answers read from the sample answer set: the baseline of the story,
- * where the client is named in 2 of 10. A workspace has one example client; calling this again
- * returns the existing one, and nothing is written.
+ * where the client is named in 2 of 10, and its four fixes. A workspace has one example client;
+ * calling this again returns the existing one and writes nothing (apart from the fixes, when an
+ * older database has none).
  *
  * @param {import('node:sqlite').DatabaseSync} db
  * @param {number} workspaceId
@@ -30,7 +32,11 @@ export async function addSampleClient(
   { now = Date.now(), answerSet = loadAnswerSet() } = {},
 ) {
   const existing = clients.findSampleClient(db, workspaceId);
-  if (existing) return { id: existing.id, created: false };
+  if (existing) {
+    // A database seeded before fixes existed gets them on the next seed.
+    transaction(db, () => addSampleFixes(db, workspaceId, existing.id, { answerSet }));
+    return { id: existing.id, created: false };
+  }
 
   // Engines are async, so every answer is collected before the transaction opens.
   const engines = createSampleEngines(answerSet);
@@ -85,6 +91,7 @@ export async function addSampleClient(
     }
     scan = applyEvent(scan, 'complete', { now });
     scans.saveScan(db, workspaceId, scanId, scan);
+    addSampleFixes(db, workspaceId, clientId, { answerSet });
     return { id: clientId, created: true };
   });
 }
