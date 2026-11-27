@@ -5,6 +5,7 @@ import * as clients from '../repositories/client-repository.js';
 import * as fixes from '../repositories/fix-repository.js';
 import * as questions from '../repositories/question-repository.js';
 import * as scans from '../repositories/scan-repository.js';
+import { deltaOf, HISTORY_LENGTH, nextActionOf } from './client-progress.js';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -29,14 +30,22 @@ export function normalizeDomain(input) {
 
 /**
  * The client as the web app lists it: its details, how many questions it asks, how its fixes
- * stand, the scan in progress (if any) and the totals of the latest finished scan.
+ * stand, the scan in progress (if any), the totals of the latest finished scan, how the last scans
+ * trended and what to do next.
  */
 function summarize(db, client) {
   const active = scans.findActiveScan(db, client.workspaceId, client.id);
-  const latest = scans
+  const finished = scans
     .listScans(db, client.workspaceId, client.id)
-    .find((scan) => scan.state === 'done');
-  return {
+    .filter((scan) => scan.state === 'done')
+    .slice(0, HISTORY_LENGTH)
+    .map((scan) => ({
+      ...scan,
+      ...answers.scanTotals(db, client.workspaceId, scan.id),
+    }));
+  const [latest] = finished;
+  const history = finished.reverse().map(({ ok, mentioned }) => ({ ok, mentioned }));
+  const summary = {
     id: client.id,
     name: client.name,
     domain: client.domain,
@@ -55,10 +64,15 @@ function summarize(db, client) {
           id: latest.id,
           number: latest.number,
           finishedAt: latest.finishedAt,
-          ...answers.scanTotals(db, client.workspaceId, latest.id),
+          ok: latest.ok,
+          mentioned: latest.mentioned,
+          failed: latest.failed,
         }
       : null,
+    history,
+    delta: deltaOf(history),
   };
+  return { ...summary, nextAction: nextActionOf(summary) };
 }
 
 /**

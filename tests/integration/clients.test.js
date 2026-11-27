@@ -149,4 +149,21 @@ describe('client routes', () => {
       { ok: 10, mentioned: 2 },
     );
   });
+
+  it('gives each listed client the trend and next step the clients page draws', async (t) => {
+    const { call } = await setup(t);
+    await call('POST', '/api/app/sample');
+    await call('POST', '/api/app/clients', NEW_CLIENT);
+
+    const { json } = await call('GET', '/api/app/clients');
+    const northside = json.clients.find((c) => c.sample);
+    assert.deepEqual(northside.history, [{ ok: 10, mentioned: 2 }]);
+    assert.equal(northside.delta, null);
+    assert.deepEqual(northside.nextAction, { label: 'Review fixes', tab: 'fixes' });
+
+    const harbor = json.clients.find((c) => !c.sample);
+    assert.deepEqual(harbor.history, []);
+    assert.equal(harbor.delta, null);
+    assert.deepEqual(harbor.nextAction, { label: 'Run first scan', run: true });
+  });
 });
