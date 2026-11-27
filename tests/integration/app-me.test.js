@@ -26,7 +26,11 @@ describe('GET /api/app/me', () => {
     assert.deepEqual(res.json.workspace, {
       id: 1,
       name: 'Brightline Digital',
+      color: '#1F3BFF',
+      website: '',
+      contact: '',
       timezone: 'Europe/London',
+      logo: null,
     });
     assert.deepEqual(
       res.json.engines.map((engine) => engine.name),
