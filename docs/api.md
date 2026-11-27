@@ -179,14 +179,17 @@ The workspace's clients, newest first. `?archived=1` lists archived clients inst
         "ok": 10,
         "mentioned": 2,
         "failed": 0
-      }
+      },
+      "history": [{ "ok": 10, "mentioned": 2 }],
+      "delta": null,
+      "nextAction": { "label": "Review fixes", "tab": "fixes" }
     }
   ],
   "archivedCount": 0
 }
 ```
 
-`fixes` counts the client's fixes by status (see [Fixes](#fixes)). `latest` is the newest finished scan, or `null`. `runningId` is the id of the scan in progress, or `null`.
+`fixes` counts the client's fixes by status (see [Fixes](#fixes)). `latest` is the newest finished scan, or `null`. `runningId` is the id of the scan in progress, or `null`. `history` holds the totals of up to the last 8 finished scans, oldest first; the clients page draws a trend line from it once it has 3. `delta` is how many more answers name the client than in the scan before, or `null` with fewer than two finished scans. `nextAction` is the button on the client's card: `{ label, run: true }` starts a scan from the list, `{ label, tab }` opens that page of the client (`questions` when it has none, `fixes` while any are to do, `overview` when archived).
 
 ### `POST /api/app/clients` (signed in)
 
