@@ -1,6 +1,7 @@
 import { readJson } from '../http/body.js';
 import { validate } from '../lib/validate.js';
 import { INTENTS } from '../repositories/question-repository.js';
+import { suggestQuestions } from '../services/question-suggestions.js';
 import { idParam } from './clients.js';
 
 const TEXT = { type: 'string', min: 3, max: 200 };
@@ -17,6 +18,12 @@ const UPDATE = {
   active: { type: 'boolean' },
 };
 
+const SUGGEST = {
+  name: { type: 'string', required: true, max: 100 },
+  type: { type: 'string', max: 100, default: '' },
+  city: { type: 'string', max: 100, default: '' },
+};
+
 /**
  * The questions each client is scanned with. Every route answers with the whole client, because
  * the questions page redraws from that one response.
@@ -24,6 +31,14 @@ const UPDATE = {
 export function registerQuestionRoutes(router, { sessionHttp, clientService }) {
   const route = (handler) =>
     sessionHttp.requireUser((ctx) => handler(ctx, ctx.session.workspace.id));
+
+  // Needs no client: the add-a-client page asks before the client exists.
+  router.get(
+    '/api/app/suggest',
+    sessionHttp.requireUser((ctx) => ({
+      questions: suggestQuestions(validate(SUGGEST, Object.fromEntries(ctx.url.searchParams))),
+    })),
+  );
 
   router.get(
     '/api/app/clients/:id/questions',

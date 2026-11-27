@@ -121,3 +121,14 @@ CI (`.github/workflows/ci.yml`) runs lint and format checks, the tests on Node.j
 - `xo_cards`: the scan and draft cards shown in a chat.
 
 Replies are scripted (`src/server/services/xo/replies.js`): a message is matched to an intent by keyword and the reply is filled in from the workspace's own data, so no request leaves the server and every number is grounded. A turn is prepared in one transaction (`chat-service.js`) and returned as a list of events; the route (`routes/xo.js`) sends them as server-sent events with a pause between words. Drafts (`drafts.js`) are built from the client record and leave any fact the record does not hold as a placeholder. Only a workspace owner approves or rejects; anyone in the workspace can edit. Xaeo never changes a client's site: an approved draft is exported, and the person ships it.
+
+## Fixes and workspace settings
+
+`004_fixes_workspace.sql` adds the tables for fixes and the settings that belong to the workspace, each with a `workspace_id`:
+
+- `fixes`: the ranked work for a client, with its status (`todo`, `done`, `wont`), the proposed change and how many missed answers it is expected to win back (`gain`). `fix_evidence` links a fix to the answers that justify it.
+- A done fix counts as measured only by a scan that finished after `done_at`, so an earlier scan is never read as proof. The progress estimate is the latest scan's count plus the `gain` of every fix that is open, or done but not yet measured. It is an estimate and the web app labels it so.
+- `fix_handoffs`: one row per export, with a SHA-256 of what the row said. A fix whose current fingerprint differs from its last handoff reads as changed since the last export (`services/fixes/fix-export.js`). `services/fixes/csv.js` writes RFC 4180 and puts an apostrophe before any cell a spreadsheet would run as a formula.
+- Brand, logo and time zone are columns on `workspaces`. The logo is stored in the database and served with a policy that blocks scripts; its bytes are checked against the declared type and an SVG that carries script is refused (`services/workspace-service.js`). Owners change these; `requireOwner` in `http/session.js` is the guard.
+- `clients.deletion_requested_at` and `deletion_execute_after` hold a pending client deletion. `services/lifecycle-service.js` deletes due clients at start-up and hourly, and the foreign keys remove everything under the client.
+- Xaeo saves no website observations, so comparing them (`verify`) is refused for every fix and `canVerify` is always false.

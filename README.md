@@ -46,7 +46,7 @@ Xaeo is under active development. This list tracks what is in `main`:
 - [x] Database layer and accounts (sign up, log in, sessions, user and admin roles)
 - [ ] Agency web app: clients, buyer questions, scans and answers
 - [x] Xo assistant and approvals: scripted replies, drafts with placeholders, owner approval and export
-- [ ] Fixes and workspace settings
+- [x] Fixes and workspace settings: ranked fixes with status and a CSV handoff, agency brand and logo, time zone, workspace export, client deletion with a grace period
 - [ ] White-label client reports
 - [ ] Account, team and admin pages
 

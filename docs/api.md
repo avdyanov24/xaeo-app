@@ -113,7 +113,7 @@ Ends the current session and clears the cookie. `204`, also when there was no se
 
 ### `GET /api/app/me` (signed in)
 
-Everything the web app needs to start: the user with their role in the workspace, the workspace, and the engines. Answers come from the sample engine, so `engineStatus.mode` is `sample`. `xo` is `true`: the web app shows Xo's panel and the Approvals page only when it is set.
+Everything the web app needs to start: the user with their role in the workspace, the workspace with its brand and time zone, and the engines. `workspace.logo` is a URL (see [`GET /api/app/brand/logo`](#get-apiappbrandlogo-signed-in)) or `null`. Answers come from the sample engine, so `engineStatus.mode` is `sample`. `xo` is `true`: the web app shows Xo's panel and the Approvals page only when it is set.
 
 ```json
 {
@@ -124,7 +124,15 @@ Everything the web app needs to start: the user with their role in the workspace
     "role": "user",
     "workspaceRole": "owner"
   },
-  "workspace": { "id": 1, "name": "Brightline Digital", "timezone": "Europe/London" },
+  "workspace": {
+    "id": 1,
+    "name": "Brightline Digital",
+    "color": "#1F3BFF",
+    "website": "",
+    "contact": "",
+    "timezone": "Europe/London",
+    "logo": null
+  },
   "engines": [
     { "id": "chatgpt", "name": "ChatGPT" },
     { "id": "claude", "name": "Claude" }
@@ -141,7 +149,7 @@ Everything the web app needs to start: the user with their role in the workspace
 }
 ```
 
-`onboarding` drives the first-run checklist on the clients list: `client` is true once the workspace has an active client, `questions` once an active client has a question switched on. `brand` and `report` stay `false` until branding and reports exist.
+`onboarding` drives the first-run checklist on the clients list: `client` is true once the workspace has an active client, `questions` once an active client has a question switched on. `brand` is true once the owner has set a logo, a colour other than the default, a website or a contact line; `report` stays `false` until reports exist.
 
 ### `GET /api/app/clients` (signed in)
 
@@ -162,6 +170,7 @@ The workspace's clients, newest first. `?archived=1` lists archived clients inst
       "weekly": true,
       "nextRunAt": "2026-12-03T10:00:00.000Z",
       "questions": 5,
+      "fixes": { "todo": 3, "done": 1, "wont": 0, "total": 4 },
       "runningId": null,
       "latest": {
         "id": 1,
@@ -177,7 +186,7 @@ The workspace's clients, newest first. `?archived=1` lists archived clients inst
 }
 ```
 
-`latest` is the newest finished scan, or `null`. `runningId` is the id of the scan in progress, or `null`.
+`fixes` counts the client's fixes by status (see [Fixes](#fixes)). `latest` is the newest finished scan, or `null`. `runningId` is the id of the scan in progress, or `null`.
 
 ### `POST /api/app/clients` (signed in)
 
@@ -323,6 +332,10 @@ One answer in full, for the reader that opens from a grid cell (`id` is the cell
 
 The client's questions in order, without the deleted ones: `[{ "id", "text", "intent", "active" }]`.
 
+### `GET /api/app/suggest` (signed in)
+
+Buyer questions to start a client with. Query: `name` (required), `type` and `city` (optional, up to 100 characters each). Answers `{ "questions": [{ "text", "intent", "on" }] }`: six questions written from fixed templates and the details sent, so the same details always give the same questions. The first five have `on: true`; the sixth names the client and is offered switched off. No model is called. `422` when `name` is missing.
+
 ### `POST /api/app/clients/:id/questions` (signed in)
 
 Adds a question at the end. Body: `text` (3 to 200 characters) and optional `intent` (default `find`). A client has at most 50 questions (`409` beyond that). Responds `201` with the client as `GET /api/app/clients/:id` returns it.
@@ -378,6 +391,127 @@ Stops a queued or running scan and keeps the answers already stored. `409` once 
 ### `POST /api/app/scans/:id/retry` (signed in)
 
 Starts a failed or cancelled scan again from the first answer, replacing its stored answers. `409` when the scan cannot be retried or the client already has one in progress. A scan that was running when the server restarted is marked `failed` at start-up and can be retried.
+
+## Fixes
+
+A fix is ranked work that follows from missed answers: a page to publish, structured data to add, copy to change. Fix ids are strings. Marking a fix done records what the agency says; nothing here fetches or checks the client's website.
+
+### `GET /api/app/clients/:id/fixes` (signed in)
+
+The client's fixes in rank order, with what the Fixes view needs to draw them:
+
+```json
+{
+  "fixes": [
+    {
+      "id": "1",
+      "kind": "fix",
+      "title": "Add LocalBusiness structured data to the home page",
+      "type": "jsonld",
+      "status": "done",
+      "impact": "High",
+      "evidence": "Strong",
+      "url": "https://northsideplumbing.co.uk/",
+      "engines": ["ChatGPT", "Claude"],
+      "why": "...",
+      "code": "...",
+      "lang": "jsonld",
+      "verify": "...",
+      "gain": 1,
+      "doneAt": "2026-11-27T09:00:00.000Z",
+      "evidenceAnswers": [
+        {
+          "id": "9",
+          "engine": "ChatGPT",
+          "question": "...",
+          "label": "Not mentioned",
+          "position": null
+        }
+      ],
+      "postDoneScan": false,
+      "latestAnswers": [],
+      "latestReturned": 0,
+      "nowMentioned": 0,
+      "canVerify": false,
+      "originalObservationId": null,
+      "verification": { "latest": null, "history": [] }
+    }
+  ],
+  "estimate": { "current": 2, "total": 10, "projected": 6 },
+  "allDone": false,
+  "definitions": { "impact": { "High": "..." }, "evidence": { "Strong": "..." } }
+}
+```
+
+`type` is `jsonld`, `page`, `listing`, `copy` or `crawler`; `status` is `todo`, `done` or `wont`; `impact` is `High`, `Medium` or `Low`; `evidence` is `Strong`, `Medium` or `Weak`. `engines` are display names. A done fix is `postDoneScan` once a scan finished after `doneAt`; `latestAnswers`, `latestReturned` and `nowMentioned` then say how the answers it is linked to read in the latest scan. `estimate` is `null` before the first finished scan; `projected` is what the count would be if every open fix, and every done fix not yet measured by a scan, wins back the `gain` answers it is linked to. It is an estimate, never a promise. `allDone` is true when every fix is done. `404` for a client in another workspace.
+
+### `POST /api/app/fixes/:id/status` (signed in)
+
+Body: `{ "status": "todo" | "done" | "wont" }`. Marks the fix done (recording `doneAt`), sets it aside, or reopens it, and answers with the client's fixes as above. Repeating a status changes nothing. `404` for a fix in another workspace, `422` for an unknown status.
+
+### `POST /api/app/fixes/:id/verify` (signed in, workspace owner)
+
+Body: `{ beforeObservationId, afterObservationId, targetUrl, condition: { kind: "title" | "schemaType", value }, reviewed: true }`. Compares two saved website observations for a fix. Xaeo saves no website observations, so no fix has a pair to compare: every well-formed request for an existing fix answers `409`, and `canVerify` stays `false`. `403` for a member, `404` for a fix in another workspace, `422` for a malformed body or `reviewed` not `true`.
+
+### `GET /api/app/clients/:id/fixes.csv` (signed in)
+
+The client's fixes as a CSV file, one record per fix, so they can go to whoever makes the change. The columns are `Fix ID`, `Title`, `Client`, `Domain`, `Page`, `Type`, `Engines`, `Impact`, `Evidence`, `Status`, `Why`, `Draft change` and `How to verify`. The file is RFC 4180 (comma-separated, CRLF records, fields with commas, quotes or line breaks in double quotes) in UTF-8 with a byte order mark, sent as an attachment named after the client. A cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading apostrophe so a spreadsheet reads it as text, never as a formula. `?only=new` leaves out fixes already exported and unchanged since. Reading the file records nothing; use `POST /handoffs` once the download succeeded.
+
+### `GET /api/app/clients/:id/handoffs` (signed in)
+
+Which fixes have been exported: `{ "handoffs": [{ "fixId": "1", "csv": { "state": "sent", "count": 1, "lastAt": "2026-11-27T10:00:00.000Z" } }] }`. `state` is `sent` when the fix is unchanged since its last export and `changed` when it was edited (its status included) afterwards. A fix never exported is not listed.
+
+### `POST /api/app/clients/:id/handoffs` (signed in)
+
+Records that fixes went into an export. Body: `{ "fixIds": ["1", "2"], "channel": "csv" }`, one to 100 ids as the Fixes view has them. Answers `{ "recorded": 2 }`. Repeated ids count once. `404` when any id is not this client's fix, and then nothing is recorded; `422` for a malformed list.
+
+## Workspace settings
+
+The agency's own name, brand and time zone. Anyone in the workspace can read them (they arrive in `GET /api/app/me`); changing them is for the workspace owner, and a member gets `403`.
+
+### `POST /api/app/brand` (signed in, workspace owner)
+
+Saves the agency name and the brand shown on reports. Body: `name` (1 to 100 characters), `color` (`#RRGGBB`, default `#1F3BFF`), `website` and `contact` (up to 200 characters each, default empty). Answers with the same document as `GET /api/app/me`. `422` lists invalid fields.
+
+### `POST /api/app/brand/logo` (signed in, workspace owner)
+
+Uploads the logo. The body is the image itself, not JSON: send the file with `Content-Type: image/png`, `image/jpeg` or `image/svg+xml`, up to 300 KB. The bytes must be that kind of image (the type in the header is not taken on trust), and an SVG that carries script or embedded content is refused. Replaces any earlier logo and answers with the same document as `GET /api/app/me`, whose `workspace.logo` is the new URL. `413` over 300 KB, `415` for another type, `422` when the bytes are not that image or the body is empty.
+
+### `POST /api/app/brand/logo/delete` (signed in, workspace owner)
+
+Removes the logo and answers with the same document as `GET /api/app/me`. Safe to repeat.
+
+### `GET /api/app/brand/logo` (signed in)
+
+The logo file, with the type it was uploaded as. It is sent with `Content-Security-Policy: default-src 'none'; sandbox`, so an SVG opened directly cannot run script. The URL in `workspace.logo` ends in `?v=<upload time>`, so a new logo is a new URL. `404` when the workspace has no logo.
+
+### `POST /api/app/workspace/timezone` (signed in, workspace owner)
+
+Sets the workspace time zone, which the web app uses to show when weekly rescans run. Body: `{ "timezone": "Europe/Sofia" }`, an IANA zone name or `UTC`. Answers `{ "timezone": "Europe/Sofia" }`; the new value is in `workspace.timezone` of `GET /api/app/me` from then on. `400` for a zone the server does not know (offsets such as `+01:00` are not zones), `422` when the field is missing.
+
+### `GET /api/app/export` (signed in, workspace owner)
+
+Downloads everything the workspace holds as one JSON file, `xaeo-workspace-export.json`: `exportedAt`; `workspace` (name, brand colour, website, contact line, time zone, and `hasLogo`: the logo file itself is not included); `members` (name, email, role in the workspace, when they joined); and `clients`, each with its details (archived clients and pending deletion dates included), `questions`, `scans` with their `answers`, and `fixes` with `answerIds` (the answers that justify them) and `handoffs` (the exports they went into). Password hashes and session tokens are never part of it, nor is any other workspace's data. `403` for a member.
+
+## Client deletion
+
+Deleting a client is a request first and a deletion seven days later, so a mistake can be undone. Only an archived client can be asked about, and the client stays archived and readable until the deletion runs. All of these are for the workspace owner (`403` for a member) and answer `404` for a client in another workspace. The deletion removes the client with its questions, scans, answers, fixes and Xo drafts; the server checks for due deletions at start-up and every hour. Unarchiving a client cancels a pending deletion.
+
+### `GET /api/app/lifecycle/clients/:id` (signed in, workspace owner)
+
+`{ "deletion": { "requestedAt", "executeAfter" } }`, or `{ "deletion": null }` when none is pending. Both are ISO timestamps.
+
+### `POST /api/app/lifecycle/clients/:id/deletion-request` (signed in, workspace owner)
+
+Schedules the deletion and answers `{ deletion }` as above. Asking again keeps the first date. `409` when the client is not archived.
+
+### `POST /api/app/clients/:id/deletion-request` (signed in, workspace owner)
+
+Same as `POST /api/app/lifecycle/clients/:id/deletion-request`; the client settings page uses this address.
+
+### `POST /api/app/lifecycle/clients/:id/deletion-cancel` (signed in, workspace owner)
+
+Cancels a pending deletion and answers `{ "deletion": null }`. Safe to repeat.
 
 ## Xo, the assistant panel
 

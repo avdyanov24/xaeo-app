@@ -90,6 +90,23 @@ export function findAnswer(db, workspaceId, id) {
   return row && toAnswer(row);
 }
 
+/**
+ * Several answers in one query, for pages that show the answers behind something else.
+ * Ids that do not exist in this workspace are left out.
+ * @param {number[]} ids
+ * @returns {AnswerRow[]} in id order
+ */
+export function listAnswersByIds(db, workspaceId, ids) {
+  if (!ids.length) return [];
+  const marks = ids.map(() => '?').join(', ');
+  return db
+    .prepare(
+      `SELECT ${COLUMNS} FROM answers WHERE workspace_id = ? AND id IN (${marks}) ORDER BY id`,
+    )
+    .all(workspaceId, ...ids)
+    .map(toAnswer);
+}
+
 /** @returns {AnswerRow[]} the answers of a scan, in the order they were collected */
 export function listAnswers(db, workspaceId, scanId) {
   return db

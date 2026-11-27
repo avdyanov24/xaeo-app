@@ -113,3 +113,35 @@ describe('question routes', () => {
     );
   });
 });
+
+describe('GET /api/app/suggest', () => {
+  it('requires a session', async (t) => {
+    const { request } = await startTestServer(t);
+    assert.equal((await request('GET', '/api/app/suggest?name=Acme')).status, 401);
+  });
+
+  it('suggests questions for a client that does not exist yet', async (t) => {
+    const { request, signIn } = await startTestServer(t);
+    const cookie = await signIn();
+    const res = await request(
+      'GET',
+      '/api/app/suggest?name=Northside%20Plumbing&type=Plumber&city=Leeds',
+      { headers: { cookie } },
+    );
+    assert.equal(res.status, 200);
+    assert.equal(res.json.questions.length, 6);
+    assert.equal(res.json.questions[0].text, 'Who is the best plumber in Leeds?');
+    assert.deepEqual(Object.keys(res.json.questions[0]).sort(), ['intent', 'on', 'text']);
+  });
+
+  it('answers 422 without a name, or with one that is too long', async (t) => {
+    const { request, signIn } = await startTestServer(t);
+    const cookie = await signIn();
+    for (const query of ['', '?type=Plumber', `?name=${'x'.repeat(101)}`])
+      assert.equal(
+        (await request('GET', `/api/app/suggest${query}`, { headers: { cookie } })).status,
+        422,
+        query,
+      );
+  });
+});
