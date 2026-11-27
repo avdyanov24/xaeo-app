@@ -46,6 +46,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Client deletion: owners request it for an archived client, which is deleted seven days later unless cancelled or unarchived.
 - `requireOwner` route guard.
 
+### Fixed
+
+- The clients list failed to draw ("We couldn't load your clients") because client rows had no `nextAction`. `GET /api/app/clients` rows now carry `history`, `delta` and `nextAction`.
+
 ## [0.1.0] - 2026-11-17
 
 ### Added
