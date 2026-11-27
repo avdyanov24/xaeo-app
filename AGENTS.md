@@ -93,8 +93,8 @@ src/
     http/           router, body parsing, response helpers, static files
     lib/            errors, logger, input validation
     db/             SQLite connection, migrations and seed steps
-    routes/         HTTP handlers (health, pages, accounts, clients, questions, scans, answers, engines)
-    services/       business logic; services/engines for the engine interface, services/scans for the scan runner and state machine
+    routes/         HTTP handlers (health, pages, accounts, clients, questions, scans, answers, engines, fixes, workspace settings, client deletion)
+    services/       business logic; services/engines for the engine interface, services/scans for the scan runner and state machine, services/fixes for fixes, the CSV and the sample fixes
     repositories/   SQL only
   web/              the browser UI, served as static files
 tests/
