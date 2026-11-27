@@ -332,6 +332,10 @@ One answer in full, for the reader that opens from a grid cell (`id` is the cell
 
 The client's questions in order, without the deleted ones: `[{ "id", "text", "intent", "active" }]`.
 
+### `GET /api/app/suggest` (signed in)
+
+Buyer questions to start a client with. Query: `name` (required), `type` and `city` (optional, up to 100 characters each). Answers `{ "questions": [{ "text", "intent", "on" }] }`: six questions written from fixed templates and the details sent, so the same details always give the same questions. The first five have `on: true`; the sixth names the client and is offered switched off. No model is called. `422` when `name` is missing.
+
 ### `POST /api/app/clients/:id/questions` (signed in)
 
 Adds a question at the end. Body: `text` (3 to 200 characters) and optional `intent` (default `find`). A client has at most 50 questions (`409` beyond that). Responds `201` with the client as `GET /api/app/clients/:id` returns it.
