@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import { describe, it } from 'node:test';
-import { readJson } from '../../src/server/http/body.js';
+import { readBuffer, readJson } from '../../src/server/http/body.js';
 import { HttpError } from '../../src/server/lib/errors.js';
 
 function fakeRequest(text, headers = { 'content-type': 'application/json' }) {
@@ -44,6 +44,30 @@ describe('readJson', () => {
     );
     await assert.rejects(
       readJson(fakeRequest(`"${'x'.repeat(50)}"`), { limit: 10 }),
+      (e) => e.status === 413,
+    );
+  });
+});
+
+describe('readBuffer', () => {
+  it('returns the raw bytes of the body', async () => {
+    const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
+    const req = Readable.from([bytes]);
+    req.headers = {};
+    assert.deepEqual([...(await readBuffer(req, { limit: 10 }))], [...bytes]);
+  });
+
+  it('returns an empty Buffer for an empty body', async () => {
+    assert.equal((await readBuffer(fakeRequest('', {}))).length, 0);
+  });
+
+  it('stops with 413 over the limit, by the declared length or by the streamed size', async () => {
+    await assert.rejects(
+      readBuffer(fakeRequest('x', { 'content-length': '11' }), { limit: 10 }),
+      (e) => e.status === 413,
+    );
+    await assert.rejects(
+      readBuffer(fakeRequest('0123456789ab', {}), { limit: 10 }),
       (e) => e.status === 413,
     );
   });
