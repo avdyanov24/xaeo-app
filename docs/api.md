@@ -197,7 +197,18 @@ Adds a client. Body: `name`, `domain` (a bare host or a pasted address, stored a
 
 ### `GET /api/app/clients/:id` (signed in)
 
-One client in the shape above, with differences: `questions` is the list `[{ id, text, intent, active }]` in order (in the list it is a count), and it adds `scans` (every scan, newest first, with `ok`, `mentioned` and `failed` totals) and `running`, the scan in progress or `null`. `404` for a client in another workspace.
+One client in the shape above, with differences: `questions` is the list `[{ id, text, intent, active }]` in order (in the list it is a count), and it adds `running`, the scan in progress or `null`, and everything the client overview page draws.
+
+- `scans`: the finished scans (done or cancelled), **oldest first**, each with `id`, `number`, `ok`, `mentioned`, `failed`, `finishedAt` and `comparisonToPrevious` (`{ comparable, reasons }`). A queued or running scan is `running`, not listed here.
+- `latest.finishedAt` and every `scans[].finishedAt` are **milliseconds since the epoch** here (the chart does arithmetic on them); the other routes send ISO strings.
+- `engines`: `[{ id, name, ok, mentioned }]` for ChatGPT and Claude, counted over the latest scan; an engine with no answers has `ok: 0`.
+- `kpis`: `{ ok, mentioned, cited, avgPosition, firstPlace, topRival, fixesDone, fixesTotal }` for the latest scan, or `null` before the first scan. `topRival` is `{ name, count }` or `null`.
+- `competitors` (`[{ name, count }]`) and `sources` (`[{ name, kind, count }]`, `kind` is `Client site` or `Other site`), most named or cited first.
+- `comparison` (`{ matchedPairs, previousOk, currentOk, complete }`) and `changes` (`{ gained, lost }`, each `[{ answerId, engine, question }]`) set the latest scan beside the one before it; `comparison` is `null` on the first scan and `changes` is empty. `comparisonAvailability` says whether that comparison is like for like, and `latestConfiguration` how the latest answers were collected.
+- `failed` and `skipped`: answers in the latest scan that failed, and that came from engines that are not connected (always `0`: both engines are always connected). `latestScanId` is the latest scan's id, or `null`.
+- `topFix` (the first open fix, in the shape of `GET /api/app/clients/:id/fixes`, or `null`), `estimate` (`{ current, total, projected }` or `null`) and `doneMarkers` (`[{ doneAt, title }]`, `doneAt` in milliseconds, one per fix marked done).
+
+Only this route carries the overview fields; the routes that change a client respond with the client without them. `404` for a client in another workspace.
 
 ### `POST /api/app/clients/:id` (signed in)
 
