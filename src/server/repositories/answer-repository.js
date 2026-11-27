@@ -131,6 +131,21 @@ export function scanTotals(db, workspaceId, scanId) {
   return { ok: row.ok, mentioned: row.mentioned, failed: row.failed };
 }
 
+/**
+ * One scan's totals split by engine. An engine that returned no answers has no row.
+ * @returns {{ engine: string, ok: number, mentioned: number }[]}
+ */
+export function scanEngineTotals(db, workspaceId, scanId) {
+  return db
+    .prepare(
+      `SELECT engine, coalesce(sum(status = 'ok'), 0) AS ok,
+              coalesce(sum(status = 'ok' AND mentioned = 1), 0) AS mentioned
+       FROM answers WHERE workspace_id = ? AND scan_id = ? GROUP BY engine ORDER BY engine`,
+    )
+    .all(workspaceId, scanId)
+    .map(({ engine, ok, mentioned }) => ({ engine, ok, mentioned }));
+}
+
 /** Removes a scan's answers, used when the scan is retried from the start. */
 export function deleteAnswers(db, workspaceId, scanId) {
   db.prepare('DELETE FROM answers WHERE workspace_id = ? AND scan_id = ?').run(workspaceId, scanId);

@@ -152,6 +152,19 @@ describe('answer repository', () => {
     assert.deepEqual(answers.scanTotals(db, ws, 9999), { ok: 0, mentioned: 0, failed: 0 });
   });
 
+  it("splits a scan's totals by engine and leaves out engines with no answers", () => {
+    const scanId = newScan();
+    const add = (engine, fields) =>
+      answers.insertAnswer(db, { ...base(), scanId, engine, ...fields });
+    add('chatgpt', { status: 'ok', mentioned: false });
+    add('claude', { status: 'ok', mentioned: true });
+    assert.deepEqual(answers.scanEngineTotals(db, ws, scanId), [
+      { engine: 'chatgpt', ok: 1, mentioned: 0 },
+      { engine: 'claude', ok: 1, mentioned: 1 },
+    ]);
+    assert.deepEqual(answers.scanEngineTotals(db, ws, 9999), []);
+  });
+
   it('allows one answer per question and engine in a scan until the scan is cleared', () => {
     const scanId = newScan();
     const add = () =>
