@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { competitorsOf, kpisOf } from '../../src/server/services/overview-metrics.js';
+import { competitorsOf, kpisOf, sourcesOf } from '../../src/server/services/overview-metrics.js';
 
 let nextId = 1;
 
@@ -13,6 +13,7 @@ function answer(fields = {}) {
     position: null,
     label: 'Not mentioned',
     competitors: [],
+    citations: [],
     ...fields,
   };
 }
@@ -116,5 +117,47 @@ describe('kpisOf', () => {
     assert.deepEqual(kpis.topRival, { name: 'CityPipe', count: 2 });
     assert.equal(kpis.fixesDone, 1);
     assert.equal(kpis.fixesTotal, 4);
+  });
+});
+
+describe('sourcesOf', () => {
+  const cite = (domain) => ({ url: `https://${domain}/page`, title: 'Page', domain });
+
+  it('counts the answers that cite each site, most cited first', () => {
+    const rows = [
+      answer({ citations: [cite('citypipe.example')] }),
+      answer({ citations: [cite('rapidflow.example'), cite('citypipe.example')] }),
+    ];
+    assert.deepEqual(sourcesOf(rows, 'northsideplumbing.co.uk'), [
+      { name: 'citypipe.example', kind: 'Other site', count: 2 },
+      { name: 'rapidflow.example', kind: 'Other site', count: 1 },
+    ]);
+  });
+
+  it('counts a site once per answer however many of its pages are cited', () => {
+    const rows = [answer({ citations: [cite('citypipe.example'), cite('citypipe.example')] })];
+    assert.equal(sourcesOf(rows, 'northsideplumbing.co.uk')[0].count, 1);
+  });
+
+  it("marks the client's own site and its subdomains", () => {
+    const rows = [
+      answer({
+        citations: [cite('northsideplumbing.co.uk'), cite('blog.northsideplumbing.co.uk')],
+      }),
+      answer({ citations: [cite('notnorthsideplumbing.co.uk')] }),
+    ];
+    const kinds = Object.fromEntries(
+      sourcesOf(rows, 'northsideplumbing.co.uk').map((s) => [s.name, s.kind]),
+    );
+    assert.deepEqual(kinds, {
+      'northsideplumbing.co.uk': 'Client site',
+      'blog.northsideplumbing.co.uk': 'Client site',
+      'notnorthsideplumbing.co.uk': 'Other site',
+    });
+  });
+
+  it('ignores failed answers', () => {
+    const rows = [answer({ status: 'failed', citations: [cite('citypipe.example')] })];
+    assert.deepEqual(sourcesOf(rows, 'northsideplumbing.co.uk'), []);
   });
 });

@@ -59,3 +59,28 @@ export function kpisOf(rows, fixes) {
     fixesTotal: fixes.total,
   };
 }
+
+/** True when `host` is the client's domain or one of its subdomains. */
+const isClientHost = (host, domain) => host === domain || host.endsWith(`.${domain}`);
+
+/**
+ * The websites the engines drew on, most cited first. A site cited twice in one answer counts once.
+ * The client's own site (and its subdomains) is marked so the page can set it apart.
+ * @param {AnswerRow[]} rows
+ * @param {string} clientDomain
+ * @returns {{ name: string, kind: 'Client site' | 'Other site', count: number }[]}
+ */
+export function sourcesOf(rows, clientDomain) {
+  const counts = new Map();
+  for (const row of returned(rows)) {
+    for (const host of new Set(row.citations.map((citation) => citation.domain.toLowerCase())))
+      counts.set(host, (counts.get(host) ?? 0) + 1);
+  }
+  return [...counts]
+    .map(([name, count]) => ({
+      name,
+      kind: isClientHost(name, clientDomain.toLowerCase()) ? 'Client site' : 'Other site',
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
