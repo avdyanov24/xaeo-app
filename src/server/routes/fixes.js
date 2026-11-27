@@ -11,6 +11,14 @@ const CONDITION = {
   value: { type: 'string', required: true, max: 200 },
 };
 
+// A file of fixes: ids as the page has them, a hundred at a time.
+const HANDOFF = {
+  fixIds: { type: 'raw', required: true },
+  channel: { type: 'enum', values: ['csv'], required: true },
+};
+const MAX_HANDOFF_IDS = 100;
+const FIX_ID = /^[1-9]\d{0,14}$/;
+
 const VERIFY = {
   beforeObservationId: { type: 'string', required: true, max: 100 },
   afterObservationId: { type: 'string', required: true, max: 100 },
@@ -19,8 +27,8 @@ const VERIFY = {
   reviewed: { type: 'boolean', required: true },
 };
 
-/** A client's fixes: the ranked list, marking one done or set aside, and comparing saved observations. */
-export function registerFixRoutes(router, { sessionHttp, fixService }) {
+/** A client's fixes: the ranked list, marking one done or set aside, comparing saved observations, and the CSV handoff. */
+export function registerFixRoutes(router, { sessionHttp, fixService, fixExportService }) {
   router.get(
     '/api/app/clients/:id/fixes',
     sessionHttp.requireUser((ctx) =>
@@ -44,6 +52,48 @@ export function registerFixRoutes(router, { sessionHttp, fixService }) {
       if (!input.reviewed)
         throw validationFailed([{ field: 'reviewed', message: 'must be confirmed' }]);
       return fixService.verify(ctx.session.workspace.id, idParam(ctx.params));
+    }),
+  );
+
+  router.get(
+    '/api/app/clients/:id/fixes.csv',
+    sessionHttp.requireUser((ctx) => {
+      const { filename, body } = fixExportService.csv(
+        ctx.session.workspace.id,
+        idParam(ctx.params),
+        { onlyNew: ctx.url.searchParams.get('only') === 'new' },
+      );
+      ctx.res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': Buffer.byteLength(body),
+        'Cache-Control': 'no-store',
+      });
+      ctx.res.end(ctx.req.method === 'HEAD' ? undefined : body);
+    }),
+  );
+
+  router.get(
+    '/api/app/clients/:id/handoffs',
+    sessionHttp.requireUser((ctx) =>
+      fixExportService.handoffs(ctx.session.workspace.id, idParam(ctx.params)),
+    ),
+  );
+
+  router.post(
+    '/api/app/clients/:id/handoffs',
+    sessionHttp.requireUser(async (ctx) => {
+      const { fixIds } = validate(HANDOFF, await readJson(ctx.req));
+      if (
+        !Array.isArray(fixIds) ||
+        fixIds.length < 1 ||
+        fixIds.length > MAX_HANDOFF_IDS ||
+        !fixIds.every((id) => typeof id === 'string' && FIX_ID.test(id))
+      )
+        throw validationFailed([
+          { field: 'fixIds', message: `must be 1 to ${MAX_HANDOFF_IDS} fix ids` },
+        ]);
+      return fixExportService.recordHandoffs(ctx.session.workspace.id, idParam(ctx.params), fixIds);
     }),
   );
 }

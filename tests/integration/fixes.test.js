@@ -142,4 +142,80 @@ describe('fix routes', () => {
       total: 4,
     });
   });
+
+  it('downloads the fixes as a CSV attachment', async (t) => {
+    const { call, sample } = await setup(t);
+    const res = await call('GET', `/api/app/clients/${sample}/fixes.csv`);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers['content-type'], 'text/csv; charset=utf-8');
+    assert.equal(
+      res.headers['content-disposition'],
+      'attachment; filename="Northside Plumbing fixes.csv"',
+    );
+    assert.equal(res.headers['cache-control'], 'no-store');
+    const lines = res.body.split('\r\n');
+    assert.ok(lines[0].startsWith('\uFEFFFix ID,Title,Client,'));
+    assert.ok(res.body.includes('Add LocalBusiness structured data to the home page'));
+    assert.ok(res.body.endsWith('\r\n'));
+  });
+
+  it('records a CSV handoff, then leaves the exported fixes out of only=new', async (t) => {
+    const { call, sample } = await setup(t);
+    const url = `/api/app/clients/${sample}`;
+    assert.deepEqual((await call('GET', `${url}/handoffs`)).json, { handoffs: [] });
+
+    const recorded = await call('POST', `${url}/handoffs`, { fixIds: ['1', '2'], channel: 'csv' });
+    assert.deepEqual(recorded.json, { recorded: 2 });
+
+    const { handoffs } = (await call('GET', `${url}/handoffs`)).json;
+    assert.deepEqual(
+      handoffs.map((h) => [h.fixId, h.csv.state, h.csv.count]),
+      [
+        ['1', 'sent', 1],
+        ['2', 'sent', 1],
+      ],
+    );
+    const fresh = await call('GET', `${url}/fixes.csv?only=new`);
+    const ids = fresh.body
+      .split('\r\n')
+      .slice(1, -1)
+      .map((line) => line.split(',')[0]);
+    assert.deepEqual(ids, ['3', '4']);
+
+    await call('POST', `/api/app/fixes/2/status`, { status: 'done' });
+    const changed = (await call('GET', `${url}/handoffs`)).json.handoffs;
+    assert.equal(changed.find((h) => h.fixId === '2').csv.state, 'changed');
+  });
+
+  it('rejects a malformed handoff and records nothing for a fix that is not the client’s', async (t) => {
+    const { call, sample } = await setup(t);
+    const url = `/api/app/clients/${sample}/handoffs`;
+    for (const body of [
+      { fixIds: [], channel: 'csv' },
+      { fixIds: ['1'], channel: 'email' },
+      { fixIds: [1], channel: 'csv' },
+      { fixIds: ['abc'], channel: 'csv' },
+      { fixIds: Array.from({ length: 101 }, (_, i) => String(i + 1)), channel: 'csv' },
+      { channel: 'csv' },
+    ])
+      assert.equal((await call('POST', url, body)).status, 422, JSON.stringify(body).slice(0, 60));
+    assert.equal((await call('POST', url, { fixIds: ['1', '999'], channel: 'csv' })).status, 404);
+    assert.deepEqual((await call('GET', url)).json, { handoffs: [] });
+  });
+
+  it("keeps another workspace out of a client's CSV and handoffs", async (t) => {
+    const { sample, request, signIn } = await setup(t);
+    const outsider = await signIn();
+    const as = (method, path, json) =>
+      request(method, path, { headers: { cookie: outsider }, json });
+    assert.equal((await as('GET', `/api/app/clients/${sample}/fixes.csv`)).status, 404);
+    assert.equal((await as('GET', `/api/app/clients/${sample}/handoffs`)).status, 404);
+    const post = await as('POST', `/api/app/clients/${sample}/handoffs`, {
+      fixIds: ['1'],
+      channel: 'csv',
+    });
+    assert.equal(post.status, 404);
+    const anon = (path) => request('GET', path);
+    assert.equal((await anon(`/api/app/clients/${sample}/fixes.csv`)).status, 401);
+  });
 });

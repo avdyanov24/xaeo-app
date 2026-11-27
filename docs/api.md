@@ -441,6 +441,18 @@ Body: `{ "status": "todo" | "done" | "wont" }`. Marks the fix done (recording `d
 
 Body: `{ beforeObservationId, afterObservationId, targetUrl, condition: { kind: "title" | "schemaType", value }, reviewed: true }`. Compares two saved website observations for a fix. Xaeo saves no website observations, so no fix has a pair to compare: every well-formed request for an existing fix answers `409`, and `canVerify` stays `false`. `403` for a member, `404` for a fix in another workspace, `422` for a malformed body or `reviewed` not `true`.
 
+### `GET /api/app/clients/:id/fixes.csv` (signed in)
+
+The client's fixes as a CSV file, one record per fix, so they can go to whoever makes the change. The columns are `Fix ID`, `Title`, `Client`, `Domain`, `Page`, `Type`, `Engines`, `Impact`, `Evidence`, `Status`, `Why`, `Draft change` and `How to verify`. The file is RFC 4180 (comma-separated, CRLF records, fields with commas, quotes or line breaks in double quotes) in UTF-8 with a byte order mark, sent as an attachment named after the client. A cell that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading apostrophe so a spreadsheet reads it as text, never as a formula. `?only=new` leaves out fixes already exported and unchanged since. Reading the file records nothing; use `POST /handoffs` once the download succeeded.
+
+### `GET /api/app/clients/:id/handoffs` (signed in)
+
+Which fixes have been exported: `{ "handoffs": [{ "fixId": "1", "csv": { "state": "sent", "count": 1, "lastAt": "2026-11-27T10:00:00.000Z" } }] }`. `state` is `sent` when the fix is unchanged since its last export and `changed` when it was edited (its status included) afterwards. A fix never exported is not listed.
+
+### `POST /api/app/clients/:id/handoffs` (signed in)
+
+Records that fixes went into an export. Body: `{ "fixIds": ["1", "2"], "channel": "csv" }`, one to 100 ids as the Fixes view has them. Answers `{ "recorded": 2 }`. Repeated ids count once. `404` when any id is not this client's fix, and then nothing is recorded; `422` for a malformed list.
+
 ## Xo, the assistant panel
 
 Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.
