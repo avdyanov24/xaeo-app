@@ -10,10 +10,12 @@ const BRAND = {
   contact: { type: 'string', max: 200, default: '' },
 };
 
+const TIMEZONE = { timezone: { type: 'string', required: true, max: 64 } };
+
 /** The media type of a request: the header without parameters such as `; charset=utf-8`. */
 const mediaType = (req) => (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
 
-/** The agency's brand and logo. Reading the logo is for any member, changing anything is for owners. */
+/** The agency's own settings: brand, logo and time zone. Reading is for any member, changing is for owners. */
 export function registerWorkspaceRoutes(router, { sessionHttp, workspaceService, db }) {
   // Settings answers with the app context, so the page can refresh what it keeps from /api/app/me.
   const context = (ctx) => getAppContext(ctx.session, db);
@@ -60,6 +62,14 @@ export function registerWorkspaceRoutes(router, { sessionHttp, workspaceService,
         'Cache-Control': 'private, max-age=86400',
       });
       ctx.res.end(ctx.req.method === 'HEAD' ? undefined : data);
+    }),
+  );
+
+  router.post(
+    '/api/app/workspace/timezone',
+    sessionHttp.requireOwner(async (ctx) => {
+      const { timezone } = validate(TIMEZONE, await readJson(ctx.req));
+      return workspaceService.setTimezone(ctx.session.workspace.id, timezone);
     }),
   );
 }

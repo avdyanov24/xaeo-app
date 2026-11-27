@@ -176,3 +176,54 @@ describe('the agency logo', () => {
     assert.equal((await request('GET', '/api/app/brand/logo')).status, 401);
   });
 });
+
+describe('POST /api/app/workspace/timezone', () => {
+  it('requires a session', async (t) => {
+    const { request } = await startTestServer(t);
+    const res = await request('POST', '/api/app/workspace/timezone', {
+      json: { timezone: 'UTC' },
+    });
+    assert.equal(res.status, 401);
+  });
+
+  it('saves a zone and shows it in /me after a reload', async (t) => {
+    const { call } = await setup(t);
+    const res = await call('POST', '/api/app/workspace/timezone', {
+      json: { timezone: 'Europe/Sofia' },
+    });
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.json, { timezone: 'Europe/Sofia' });
+    assert.equal((await call('GET', '/api/app/me')).json.workspace.timezone, 'Europe/Sofia');
+    const utc = await call('POST', '/api/app/workspace/timezone', { json: { timezone: 'UTC' } });
+    assert.equal(utc.json.timezone, 'UTC');
+  });
+
+  it('answers 400 for a zone it does not know and keeps the old one', async (t) => {
+    const { call } = await setup(t);
+    for (const timezone of ['Mars/Olympus', '+02:00', 'Europe/London; DROP TABLE workspaces'])
+      assert.equal(
+        (await call('POST', '/api/app/workspace/timezone', { json: { timezone } })).status,
+        400,
+        timezone,
+      );
+    assert.equal((await call('GET', '/api/app/me')).json.workspace.timezone, 'Europe/London');
+  });
+
+  it('answers 422 when the zone is missing', async (t) => {
+    const { call } = await setup(t);
+    assert.equal((await call('POST', '/api/app/workspace/timezone', { json: {} })).status, 422);
+  });
+
+  it('is for the workspace owner only and never changes another workspace', async (t) => {
+    const { call, request, signIn, demote } = await setup(t);
+    const outsider = await signIn();
+    await call('POST', '/api/app/workspace/timezone', { json: { timezone: 'Asia/Tokyo' } });
+    const theirs = await request('GET', '/api/app/me', { headers: { cookie: outsider } });
+    assert.equal(theirs.json.workspace.timezone, 'Europe/London');
+
+    demote();
+    const res = await call('POST', '/api/app/workspace/timezone', { json: { timezone: 'UTC' } });
+    assert.equal(res.status, 403);
+    assert.equal((await call('GET', '/api/app/me')).json.workspace.timezone, 'Asia/Tokyo');
+  });
+});

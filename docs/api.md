@@ -481,6 +481,10 @@ Removes the logo and answers with the same document as `GET /api/app/me`. Safe t
 
 The logo file, with the type it was uploaded as. It is sent with `Content-Security-Policy: default-src 'none'; sandbox`, so an SVG opened directly cannot run script. The URL in `workspace.logo` ends in `?v=<upload time>`, so a new logo is a new URL. `404` when the workspace has no logo.
 
+### `POST /api/app/workspace/timezone` (signed in, workspace owner)
+
+Sets the workspace time zone, which the web app uses to show when weekly rescans run. Body: `{ "timezone": "Europe/Sofia" }`, an IANA zone name or `UTC`. Answers `{ "timezone": "Europe/Sofia" }`; the new value is in `workspace.timezone` of `GET /api/app/me` from then on. `400` for a zone the server does not know (offsets such as `+01:00` are not zones), `422` when the field is missing.
+
 ## Xo, the assistant panel
 
 Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.
