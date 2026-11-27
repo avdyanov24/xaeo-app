@@ -13,6 +13,7 @@ import { createAuthService } from './services/auth-service.js';
 import { createClientService } from './services/client-service.js';
 import { createFixExportService } from './services/fixes/fix-export.js';
 import { createFixService } from './services/fixes/fix-service.js';
+import { createLifecycleService } from './services/lifecycle-service.js';
 import { createWorkspaceService } from './services/workspace-service.js';
 import { createStatsService } from './services/stats-service.js';
 import { createSampleEngines } from './services/engines/sample-engine.js';
@@ -52,6 +53,7 @@ export function createApp({
   const fixService = createFixService({ db });
   const fixExportService = createFixExportService({ db });
   const workspaceService = createWorkspaceService({ db });
+  const lifecycleService = createLifecycleService({ db });
   const answerSet = loadAnswerSet();
   const artifactService = createArtifactService({ db });
   const chatService = createChatService({
@@ -70,6 +72,10 @@ export function createApp({
   // Scans that were running when the last process stopped can never finish; mark them failed.
   const recovered = scanRunner.recover();
   if (recovered) logger.info('scans_recovered', { count: recovered });
+  // Clients whose deletion grace period has ended are deleted now and then hourly. The timer never keeps the process alive.
+  const purged = lifecycleService.purgeDue();
+  if (purged) logger.info('clients_deleted', { count: purged });
+  setInterval(() => lifecycleService.purgeDue(), 60 * 60 * 1000).unref();
   // Five wrong passwords per address and email, then a 15-minute wait.
   const loginLimiter = createFailureLimiter({ limit: 5, windowMs: 15 * 60 * 1000 });
   const router = createRouter();
@@ -87,6 +93,7 @@ export function createApp({
     fixService,
     fixExportService,
     workspaceService,
+    lifecycleService,
     statsService,
     scanRunner,
     artifactService,

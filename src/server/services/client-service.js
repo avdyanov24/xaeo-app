@@ -163,9 +163,13 @@ export function createClientService({ db, now = Date.now }) {
       });
     },
 
+    /** Bringing a client back also cancels a pending deletion: a visible client is not about to vanish. */
     unarchive(workspaceId, id) {
       mustFind(workspaceId, id);
-      clients.setArchivedAt(db, workspaceId, id, null);
+      transaction(db, () => {
+        clients.setArchivedAt(db, workspaceId, id, null);
+        clients.setDeletion(db, workspaceId, id, { requestedAt: null, executeAfter: null });
+      });
     },
 
     /** @returns the client as `get` returns it, so the page can redraw from one response */

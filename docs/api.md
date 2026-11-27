@@ -493,6 +493,26 @@ Sets the workspace time zone, which the web app uses to show when weekly rescans
 
 Downloads everything the workspace holds as one JSON file, `xaeo-workspace-export.json`: `exportedAt`; `workspace` (name, brand colour, website, contact line, time zone, and `hasLogo`: the logo file itself is not included); `members` (name, email, role in the workspace, when they joined); and `clients`, each with its details (archived clients and pending deletion dates included), `questions`, `scans` with their `answers`, and `fixes` with `answerIds` (the answers that justify them) and `handoffs` (the exports they went into). Password hashes and session tokens are never part of it, nor is any other workspace's data. `403` for a member.
 
+## Client deletion
+
+Deleting a client is a request first and a deletion seven days later, so a mistake can be undone. Only an archived client can be asked about, and the client stays archived and readable until the deletion runs. All of these are for the workspace owner (`403` for a member) and answer `404` for a client in another workspace. The deletion removes the client with its questions, scans, answers, fixes and Xo drafts; the server checks for due deletions at start-up and every hour. Unarchiving a client cancels a pending deletion.
+
+### `GET /api/app/lifecycle/clients/:id` (signed in, workspace owner)
+
+`{ "deletion": { "requestedAt", "executeAfter" } }`, or `{ "deletion": null }` when none is pending. Both are ISO timestamps.
+
+### `POST /api/app/lifecycle/clients/:id/deletion-request` (signed in, workspace owner)
+
+Schedules the deletion and answers `{ deletion }` as above. Asking again keeps the first date. `409` when the client is not archived.
+
+### `POST /api/app/clients/:id/deletion-request` (signed in, workspace owner)
+
+Same as `POST /api/app/lifecycle/clients/:id/deletion-request`; the client settings page uses this address.
+
+### `POST /api/app/lifecycle/clients/:id/deletion-cancel` (signed in, workspace owner)
+
+Cancels a pending deletion and answers `{ "deletion": null }`. Safe to repeat.
+
 ## Xo, the assistant panel
 
 Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.

@@ -122,3 +122,45 @@ export function findSampleClient(db, workspaceId) {
       .get(workspaceId),
   );
 }
+
+/**
+ * When deletion of a client was asked for and when it runs; both null when none is pending.
+ * @returns {{ requestedAt: string | null, executeAfter: string | null } | undefined} undefined when the client is not in this workspace
+ */
+export function findDeletion(db, workspaceId, id) {
+  const row = db
+    .prepare(
+      `SELECT deletion_requested_at AS requestedAt, deletion_execute_after AS executeAfter
+       FROM clients WHERE workspace_id = ? AND id = ?`,
+    )
+    .get(workspaceId, id);
+  return row && { ...row };
+}
+
+/** Sets or clears (pass nulls) the pending deletion of a client. */
+export function setDeletion(db, workspaceId, id, { requestedAt, executeAfter }) {
+  db.prepare(
+    `UPDATE clients SET deletion_requested_at = ?, deletion_execute_after = ?
+     WHERE workspace_id = ? AND id = ?`,
+  ).run(requestedAt, executeAfter, workspaceId, id);
+}
+
+/**
+ * Clients whose grace period has ended, in every workspace: this is for the background purge, not for a request.
+ * @param {string} nowIso
+ * @returns {{ id: number, workspaceId: number }[]}
+ */
+export function listDueForDeletion(db, nowIso) {
+  return db
+    .prepare(
+      `SELECT id, workspace_id AS workspaceId FROM clients
+       WHERE deletion_execute_after IS NOT NULL AND deletion_execute_after <= ? ORDER BY id`,
+    )
+    .all(nowIso)
+    .map((row) => ({ ...row }));
+}
+
+/** Deletes a client; its questions, scans, answers, fixes and Xo drafts go with it. */
+export function deleteClient(db, workspaceId, id) {
+  db.prepare('DELETE FROM clients WHERE workspace_id = ? AND id = ?').run(workspaceId, id);
+}

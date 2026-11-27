@@ -5,6 +5,7 @@ import { registerClientRoutes } from './clients.js';
 import { registerEngineRoutes } from './engines.js';
 import { registerFixRoutes } from './fixes.js';
 import { registerHealthRoutes } from './health.js';
+import { registerLifecycleRoutes } from './lifecycle.js';
 import { registerPageRoutes } from './pages.js';
 import { registerQuestionRoutes } from './questions.js';
 import { registerScanRoutes } from './scans.js';
@@ -24,5 +25,6 @@ export function registerRoutes(router, deps) {
   registerScanRoutes(router, deps);
   registerXoRoutes(router, deps);
   registerWorkspaceRoutes(router, deps);
+  registerLifecycleRoutes(router, deps);
   registerPageRoutes(router, deps);
 }
