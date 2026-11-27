@@ -46,6 +46,14 @@ export function createSessionHttp({ auth, config }) {
       return handler(ctx);
     });
 
+  /** Like `requireUser`, and the user must also own the workspace. */
+  const requireOwner = (handler) =>
+    requireUser((ctx) => {
+      if (ctx.session.workspace.role !== 'owner')
+        throw forbidden('Only a workspace owner can do this.');
+      return handler(ctx);
+    });
+
   return {
     readToken,
     setSessionCookie,
@@ -53,5 +61,6 @@ export function createSessionHttp({ auth, config }) {
     currentSession,
     requireUser,
     requireAdmin,
+    requireOwner,
   };
 }

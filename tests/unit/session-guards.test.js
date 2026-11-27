@@ -30,4 +30,11 @@ describe('route guards', () => {
     assert.equal(handler(ctxFor('admin')), 'reached');
     assert.throws(() => handler(ctxFor(undefined)), { status: 401 });
   });
+
+  it('requireOwner lets workspace owners through and rejects members with 403', () => {
+    const handler = guards.requireOwner(() => 'reached');
+    assert.equal(handler(ctxFor('member')), 'reached');
+    assert.throws(() => handler(ctxFor('admin')), { status: 403 });
+    assert.throws(() => handler(ctxFor(undefined)), { status: 401 });
+  });
 });
