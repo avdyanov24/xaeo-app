@@ -227,3 +227,80 @@ describe('POST /api/app/workspace/timezone', () => {
     assert.equal((await call('GET', '/api/app/me')).json.workspace.timezone, 'Asia/Tokyo');
   });
 });
+
+describe('GET /api/app/export', () => {
+  it('requires a session', async (t) => {
+    const { request } = await startTestServer(t);
+    assert.equal((await request('GET', '/api/app/export')).status, 401);
+  });
+
+  it('downloads the workspace with its clients, answers and fixes', async (t) => {
+    const { call } = await setup(t);
+    await call('POST', '/api/app/brand', { json: BRAND });
+    await upload(call, PNG, 'image/png');
+    const sample = (await call('POST', '/api/app/sample')).json.id;
+    await call('POST', '/api/app/fixes/2/status', { json: { status: 'done' } });
+    await call('POST', `/api/app/clients/${sample}/handoffs`, {
+      json: { fixIds: ['1'], channel: 'csv' },
+    });
+
+    const res = await call('GET', '/api/app/export');
+    assert.equal(res.status, 200);
+    assert.equal(
+      res.headers['content-disposition'],
+      'attachment; filename="xaeo-workspace-export.json"',
+    );
+    assert.equal(res.headers['cache-control'], 'no-store');
+
+    const doc = res.json;
+    assert.ok(Date.parse(doc.exportedAt) > 0);
+    assert.deepEqual(doc.workspace, {
+      name: 'Brightline Digital',
+      color: '#0F766E',
+      website: 'brightline.example',
+      contact: 'hello@brightline.example',
+      timezone: 'Europe/London',
+      hasLogo: true,
+    });
+    assert.deepEqual(
+      doc.members.map((m) => [m.name, m.role]),
+      [['Test User', 'owner']],
+    );
+    const [client] = doc.clients;
+    assert.equal(client.name, 'Northside Plumbing');
+    assert.equal(client.questions.length, 5);
+    assert.equal(client.scans.length, 1);
+    assert.equal(client.scans[0].answers.length, 10);
+    assert.equal(client.fixes.length, 4);
+    assert.equal(client.fixes[1].status, 'done');
+    assert.equal(client.fixes[0].handoffs.length, 1);
+    assert.ok(
+      client.fixes[0].answerIds.every((id) => client.scans[0].answers.some((a) => a.id === id)),
+    );
+  });
+
+  it('leaves out passwords, session tokens and the logo file', async (t) => {
+    const { call } = await setup(t);
+    await upload(call, PNG, 'image/png');
+    await call('POST', '/api/app/sample');
+    const text = (await call('GET', '/api/app/export')).body;
+    for (const secret of ['password', 'token', 'scrypt', 'hash', 'logo_type'])
+      assert.equal(text.toLowerCase().includes(secret), false, secret);
+    assert.equal(text.includes('iVBOR'), false, 'no base64 of the logo');
+  });
+
+  it("holds only this workspace's clients and members", async (t) => {
+    const { call, request, signIn } = await setup(t);
+    const outsider = await signIn();
+    await call('POST', '/api/app/sample');
+    const theirs = await request('GET', '/api/app/export', { headers: { cookie: outsider } });
+    assert.deepEqual(theirs.json.clients, []);
+    assert.equal(theirs.json.members.length, 1);
+  });
+
+  it('is for the workspace owner only', async (t) => {
+    const { call, demote } = await setup(t);
+    demote();
+    assert.equal((await call('GET', '/api/app/export')).status, 403);
+  });
+});

@@ -1,6 +1,7 @@
 import { readBuffer, readJson } from '../http/body.js';
 import { validate } from '../lib/validate.js';
 import { getAppContext } from '../services/app-service.js';
+import { exportWorkspace } from '../services/workspace-export.js';
 import { DEFAULT_BRAND_COLOR, MAX_LOGO_BYTES } from '../services/workspace-service.js';
 
 const BRAND = {
@@ -70,6 +71,21 @@ export function registerWorkspaceRoutes(router, { sessionHttp, workspaceService,
     sessionHttp.requireOwner(async (ctx) => {
       const { timezone } = validate(TIMEZONE, await readJson(ctx.req));
       return workspaceService.setTimezone(ctx.session.workspace.id, timezone);
+    }),
+  );
+
+  // Everything the workspace holds, as a download the owner can keep.
+  router.get(
+    '/api/app/export',
+    sessionHttp.requireOwner((ctx) => {
+      const body = JSON.stringify(exportWorkspace(db, ctx.session.workspace.id), null, 2);
+      ctx.res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="xaeo-workspace-export.json"',
+        'Content-Length': Buffer.byteLength(body),
+        'Cache-Control': 'no-store',
+      });
+      ctx.res.end(ctx.req.method === 'HEAD' ? undefined : body);
     }),
   );
 }

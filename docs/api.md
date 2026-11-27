@@ -489,6 +489,10 @@ The logo file, with the type it was uploaded as. It is sent with `Content-Securi
 
 Sets the workspace time zone, which the web app uses to show when weekly rescans run. Body: `{ "timezone": "Europe/Sofia" }`, an IANA zone name or `UTC`. Answers `{ "timezone": "Europe/Sofia" }`; the new value is in `workspace.timezone` of `GET /api/app/me` from then on. `400` for a zone the server does not know (offsets such as `+01:00` are not zones), `422` when the field is missing.
 
+### `GET /api/app/export` (signed in, workspace owner)
+
+Downloads everything the workspace holds as one JSON file, `xaeo-workspace-export.json`: `exportedAt`; `workspace` (name, brand colour, website, contact line, time zone, and `hasLogo`: the logo file itself is not included); `members` (name, email, role in the workspace, when they joined); and `clients`, each with its details (archived clients and pending deletion dates included), `questions`, `scans` with their `answers`, and `fixes` with `answerIds` (the answers that justify them) and `handoffs` (the exports they went into). Password hashes and session tokens are never part of it, nor is any other workspace's data. `403` for a member.
+
 ## Xo, the assistant panel
 
 Xo answers from a scripted reply set: a message is matched to an intent by keyword and the reply is filled in from the workspace's own numbers. No request leaves the server. A chat belongs to the person who started it; a draft belongs to the workspace.
