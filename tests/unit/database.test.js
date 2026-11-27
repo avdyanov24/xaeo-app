@@ -10,11 +10,14 @@ const tableNames = (db) =>
     .map((row) => row.name);
 
 describe('database', () => {
-  it('applies the identity, client and Xo migrations on open', () => {
+  it('applies the identity, client, Xo and fix migrations on open', () => {
     const db = openDatabase(':memory:');
     assert.deepEqual(tableNames(db), [
       'answers',
       'clients',
+      'fix_evidence',
+      'fix_handoffs',
+      'fixes',
       'memberships',
       'questions',
       'scans',
@@ -46,6 +49,45 @@ describe('database', () => {
     db.prepare('DELETE FROM clients WHERE id = 1').run();
     for (const table of ['questions', 'scans', 'answers'])
       assert.equal(db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n, 1, table);
+  });
+
+  it('deletes a client with its fixes, their evidence and their handoffs', () => {
+    const db = openDatabase(':memory:');
+    db.exec(`
+      INSERT INTO workspaces (id, name) VALUES (1, 'A');
+      INSERT INTO clients (id, workspace_id, name, domain) VALUES (1, 1, 'One', 'one.test');
+      INSERT INTO questions (id, workspace_id, client_id, text) VALUES (1, 1, 1, 'Q one?');
+      INSERT INTO scans (id, workspace_id, client_id, number, state, total) VALUES (1, 1, 1, 1, 'done', 1);
+      INSERT INTO answers (id, workspace_id, scan_id, question_id, question_text, engine, status)
+        VALUES (1, 1, 1, 1, 'Q one?', 'chatgpt', 'ok');
+      INSERT INTO fixes (id, workspace_id, client_id, position, title, type, impact, evidence, url, why, code, lang, verify)
+        VALUES (1, 1, 1, 1, 'Fix', 'page', 'High', 'Strong', 'https://one.test/', 'Why', 'Code', 'text', 'Verify');
+      INSERT INTO fix_evidence (workspace_id, fix_id, answer_id) VALUES (1, 1, 1);
+      INSERT INTO fix_handoffs (workspace_id, fix_id, channel, content_hash) VALUES (1, 1, 'csv', 'h');
+    `);
+    db.prepare('DELETE FROM clients WHERE id = 1').run();
+    for (const table of ['fixes', 'fix_evidence', 'fix_handoffs'])
+      assert.equal(db.prepare(`SELECT count(*) AS n FROM ${table}`).get().n, 0, table);
+  });
+
+  it('gives a new workspace the default brand colour and time zone, and no logo', () => {
+    const db = openDatabase(':memory:');
+    db.exec("INSERT INTO workspaces (id, name) VALUES (1, 'A')");
+    assert.deepEqual(
+      { ...db.prepare('SELECT * FROM workspaces').get(), created_at: 'x' },
+      {
+        id: 1,
+        name: 'A',
+        created_at: 'x',
+        color: '#1F3BFF',
+        website: '',
+        contact: '',
+        logo: null,
+        logo_type: null,
+        logo_updated_at: null,
+        timezone: 'Europe/London',
+      },
+    );
   });
 
   it('deletes a client with the Xo drafts, approvals and cards made for it', () => {
