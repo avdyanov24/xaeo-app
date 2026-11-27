@@ -5,6 +5,8 @@
  * @typedef {import('../repositories/answer-repository.js').AnswerRow} AnswerRow
  */
 
+import { ENGINES } from './engines/engine.js';
+
 /** Answers that came back; a failed answer carries no text and counts towards nothing. */
 const returned = (rows) => rows.filter((row) => row.status === 'ok');
 
@@ -83,4 +85,41 @@ export function sourcesOf(rows, clientDomain) {
       count,
     }))
     .sort((a, b) => b.count - a.count);
+}
+
+const pairKey = (row) => `${row.questionId}:${row.engine}`;
+
+/**
+ * What changed between two scans, looking only at question and engine pairs that returned an answer
+ * both times: an answer that now names the client is `gained`, one that no longer does is `lost`.
+ * `complete` is true when both scans answered the same pairs, so the headline numbers are like for like.
+ * @param {AnswerRow[]} rows the newer scan's answers
+ * @param {AnswerRow[]} previousRows the scan before it
+ */
+export function compareScans(rows, previousRows) {
+  const now = returned(rows);
+  const before = returned(previousRows);
+  const earlier = new Map(before.map((row) => [pairKey(row), row]));
+  const matched = now.filter((row) => earlier.has(pairKey(row)));
+  const describe = (row) => ({
+    answerId: String(row.id),
+    engine: ENGINES[row.engine]?.name ?? row.engine,
+    question: row.questionText,
+  });
+  return {
+    comparison: {
+      matchedPairs: matched.length,
+      previousOk: before.length,
+      currentOk: now.length,
+      complete: matched.length === now.length && matched.length === before.length,
+    },
+    changes: {
+      gained: matched
+        .filter((row) => row.mentioned && !earlier.get(pairKey(row)).mentioned)
+        .map(describe),
+      lost: matched
+        .filter((row) => !row.mentioned && earlier.get(pairKey(row)).mentioned)
+        .map(describe),
+    },
+  };
 }

@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { competitorsOf, kpisOf, sourcesOf } from '../../src/server/services/overview-metrics.js';
+import {
+  compareScans,
+  competitorsOf,
+  kpisOf,
+  sourcesOf,
+} from '../../src/server/services/overview-metrics.js';
 
 let nextId = 1;
 
@@ -159,5 +164,59 @@ describe('sourcesOf', () => {
   it('ignores failed answers', () => {
     const rows = [answer({ status: 'failed', citations: [cite('citypipe.example')] })];
     assert.deepEqual(sourcesOf(rows, 'northsideplumbing.co.uk'), []);
+  });
+});
+
+describe('compareScans', () => {
+  const pair = (questionId, engine, fields = {}) =>
+    answer({ questionId, engine, questionText: `Question ${questionId}`, ...fields });
+
+  it('lists answers that now name the client as gained and answers that stopped as lost', () => {
+    const before = [
+      pair(1, 'chatgpt'),
+      pair(1, 'claude', { mentioned: true }),
+      pair(2, 'chatgpt', { mentioned: true }),
+    ];
+    const now = [
+      pair(1, 'chatgpt', { mentioned: true }),
+      pair(1, 'claude', { mentioned: true }),
+      pair(2, 'chatgpt'),
+    ];
+    const { changes, comparison } = compareScans(now, before);
+    assert.deepEqual(changes.gained, [
+      { answerId: String(now[0].id), engine: 'ChatGPT', question: 'Question 1' },
+    ]);
+    assert.deepEqual(changes.lost, [
+      { answerId: String(now[2].id), engine: 'ChatGPT', question: 'Question 2' },
+    ]);
+    assert.deepEqual(comparison, {
+      matchedPairs: 3,
+      previousOk: 3,
+      currentOk: 3,
+      complete: true,
+    });
+  });
+
+  it('only compares pairs that returned an answer both times and says coverage changed', () => {
+    const before = [pair(1, 'chatgpt'), pair(1, 'claude', { status: 'failed' })];
+    const now = [
+      pair(1, 'chatgpt', { mentioned: true }),
+      pair(1, 'claude', { mentioned: true }),
+      pair(2, 'chatgpt', { mentioned: true }),
+    ];
+    const { changes, comparison } = compareScans(now, before);
+    assert.equal(changes.gained.length, 1);
+    assert.deepEqual(comparison, {
+      matchedPairs: 1,
+      previousOk: 1,
+      currentOk: 3,
+      complete: false,
+    });
+  });
+
+  it('reports no change when nothing differs', () => {
+    const rows = [pair(1, 'chatgpt', { mentioned: true }), pair(1, 'claude')];
+    const { changes } = compareScans(rows, rows);
+    assert.deepEqual(changes, { gained: [], lost: [] });
   });
 });
