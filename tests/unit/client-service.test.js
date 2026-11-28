@@ -65,3 +65,64 @@ describe('create', () => {
     assert.deepEqual(service.list(ws), { clients: [], archivedCount: 0 });
   });
 });
+
+describe('update', () => {
+  it('switches the weekly rescan off and back on, due a week from the change', () => {
+    const { id } = service.create(ws, details());
+    assert.equal(service.update(ws, id, { weekly: false }).nextRunAt, null);
+    const back = service.update(ws, id, { weekly: true });
+    assert.equal(back.weekly, true);
+    assert.equal(back.nextRunAt, new Date(T0 + WEEK_MS).toISOString());
+  });
+
+  it('normalises a new domain and refuses one that is not a host name', () => {
+    const { id } = service.create(ws, details());
+    assert.equal(
+      service.update(ws, id, { domain: 'https://www.Northside.example/' }).domain,
+      'northside.example',
+    );
+    assert.throws(() => service.update(ws, id, { domain: 'nope' }), { status: 422 });
+    assert.equal(service.get(ws, id).domain, 'northside.example');
+  });
+
+  it('does not schedule a rescan for an archived client', () => {
+    const { id } = service.create(ws, details());
+    service.archive(ws, id);
+    assert.equal(service.update(ws, id, { weekly: true }).nextRunAt, null);
+  });
+});
+
+describe('archive and unarchive', () => {
+  it('hides the client from the active list, counts it as archived and stops the rescan', () => {
+    const { id } = service.create(ws, details());
+    service.archive(ws, id);
+    assert.deepEqual(service.list(ws), { clients: [], archivedCount: 1 });
+    const [archived] = service.list(ws, { archived: true }).clients;
+    assert.equal(archived.status, 'archived');
+    assert.equal(archived.weekly, false);
+  });
+
+  it('brings the client back to the active list', () => {
+    const { id } = service.create(ws, details());
+    service.archive(ws, id);
+    service.unarchive(ws, id);
+    const { clients, archivedCount } = service.list(ws);
+    assert.equal(clients.length, 1);
+    assert.equal(clients[0].status, 'active');
+    assert.equal(archivedCount, 0);
+  });
+});
+
+describe('workspace scope', () => {
+  it('answers 404 for a client that belongs to another workspace', () => {
+    const { id } = service.create(ws, details());
+    const other = workspaces.insertWorkspace(db, 'Another Agency');
+    assert.throws(() => service.get(other, id), { status: 404 });
+    assert.throws(() => service.update(other, id, { weekly: false }), { status: 404 });
+    assert.throws(() => service.archive(other, id), { status: 404 });
+    assert.throws(() => service.addQuestion(other, id, { text: 'Who is best?', intent: 'find' }), {
+      status: 404,
+    });
+    assert.deepEqual(service.list(other), { clients: [], archivedCount: 0 });
+  });
+});
