@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preparing the report…</title>
+    <link rel="icon" href="/assets/favicon/report-neutral.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/ds/tokens/fonts.css" />
+    <link rel="stylesheet" href="/ds/tokens/colors.css" />
+    <link rel="stylesheet" href="/ds/tokens/typography.css" />
+    <link rel="stylesheet" href="/ui/report.css?v=10" />
+    <link rel="stylesheet" href="/ui/report-actions.css?v=3" />
+    <script type="module" src="/ui/js/report.js?v=10"></script>
+    <script type="module" src="/ui/js/report-actions.js?v=5"></script>
+  </head>
+  <body class="report-body">
+    <div class="toolbar" data-toolbar>
+      <a class="tb-back" href="/app" data-back
+        ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg
+        ><span data-back-label>Back to the workspace</span></a
+      >
+      <label><input type="checkbox" data-opt="answers" /> Full answers</label>
+      <label><input type="checkbox" data-opt="estimates" /> Linked answers</label>
+      <button type="button" class="tb-btn" data-pdf>Print or save as PDF</button>
+      <span class="tb-status" data-pdf-status role="status" aria-live="polite"></span>
+    </div>
+    <main id="report" class="report"><h1 class="loading">Preparing the report…</h1></main>
+    <footer class="page-foot" data-foot></footer>
+  </body>
+</html>

@@ -1,0 +1,950 @@
+/* White-label report. The agency's color arrives as --brand. Prints to A4. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* Client, agency and question text is user data: a long unbroken word wraps inside the page instead of running off the sheet. */
+.report {
+  overflow-wrap: anywhere;
+}
+/* R13: a failed load uses the app's empty/error shape on a white card: icon tile, heading, one sentence, one action. */
+.r-error {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 40px 32px 36px;
+  text-align: center;
+  background: #ffffff;
+  border: 2px solid #c9d1ff;
+  border-radius: 20px;
+  box-shadow: 0 4px 0 #c9d1ff;
+}
+.r-error-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 16px;
+  background: #eef1ff;
+  color: #4a5275;
+}
+.r-error-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.r-error h1 {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.r-error p {
+  margin: 0;
+  max-width: 42ch;
+  color: #4a5275;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.r-error .tb-btn {
+  display: inline-flex;
+  align-items: center;
+  margin: 8px 0 0;
+  text-decoration: none;
+  box-shadow: 0 4px 0 #1429b8;
+  transition:
+    transform var(--dur-press, 80ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow var(--dur-press, 80ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.r-error .tb-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #1429b8;
+}
+/* A failed load: no paper behind the card, and no report-only controls in the toolbar. */
+.report-failed .report {
+  background: none;
+  border-radius: 0;
+  overflow: visible;
+  padding: clamp(32px, 10vh, 96px) 16px;
+}
+.report-failed .toolbar > :not(.tb-back) {
+  display: none;
+}
+.report-failed-back .toolbar {
+  display: none;
+}
+:root {
+  --brand: #1f3bff;
+  --brand-ink: #1f3bff;
+  --brand-graphic: #1f3bff;
+  --brand-fill: #1f3bff;
+  --brand-on: #ffffff;
+}
+body.report-body {
+  margin: 0;
+  background: #eef1ff;
+  color: #0a0f33;
+  font: 400 14px/1.55 var(--font-body, system-ui, sans-serif);
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-display, system-ui, sans-serif);
+  margin: 0;
+}
+.loading {
+  padding: 80px;
+  text-align: center;
+  font: inherit;
+}
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 20px;
+  background: #ffffff;
+  border-bottom: 2px solid #c9d1ff;
+  font-weight: 600;
+}
+.toolbar label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  cursor: pointer;
+}
+.toolbar input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--brand-graphic);
+}
+/* Back to the client in the app (screen only; the toolbar never prints) */
+.tb-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-right: auto;
+  padding: 0 8px;
+  border-radius: 12px;
+  color: #1f3bff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.tb-back svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--dur-fast, 150ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+@media (hover: hover) and (pointer: fine) {
+  .tb-back:hover {
+    background: #eef1ff;
+  }
+}
+.tb-back:active {
+  background: #eef1ff;
+}
+.tb-back {
+  min-width: 0;
+  max-width: 100%;
+}
+.tb-back svg {
+  flex: none;
+}
+.tb-back span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tb-back:hover svg {
+    transform: translateX(-3px);
+  }
+}
+:focus-visible {
+  outline: 3px solid #1f3bff;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.tb-btn {
+  min-height: 44px;
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 18px;
+  background: var(--brand-fill);
+  color: var(--brand-on);
+  font: 800 14px/1 var(--font-display, sans-serif);
+  cursor: pointer;
+}
+.report {
+  max-width: 820px;
+  margin: 24px auto 80px;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+}
+/* C16: on screen the cover is capped (520px) so "At a glance" starts in the first view; print keeps a full page (250mm below). */
+.r-cover {
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  page-break-after: always;
+  break-after: page;
+}
+.r-band {
+  height: 22px;
+  background: var(--brand);
+}
+/* Cover content starts near the top (no dead band above the agency); the date/prepared line sits at the bottom. */
+.r-cover-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 72px 64px 64px;
+  gap: 10px;
+}
+.r-cover-body .r-prepared {
+  margin-top: auto;
+  padding-top: 40px;
+}
+.r-logo {
+  max-width: 240px;
+  max-height: 90px;
+  object-fit: contain;
+  object-position: left;
+  margin-bottom: 48px;
+}
+/* No logo: a brand-color monogram tile plus the agency name, so the cover still carries a mark. */
+.r-agency {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font: 900 26px/1.1 var(--font-display, sans-serif);
+  color: var(--brand-ink);
+  margin: 0 0 48px;
+}
+.r-monogram {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--brand-fill);
+  color: var(--brand-on);
+  font: 900 26px/1 var(--font-display, sans-serif);
+}
+.r-kicker {
+  font: 800 16px/1 var(--font-display, sans-serif);
+  color: var(--brand-ink);
+  margin: 0;
+}
+.r-cover h1 {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.r-cover h1.r-long {
+  font-size: 38px;
+}
+.r-cover h1.r-xlong {
+  font-size: 28px;
+  line-height: 1.15;
+}
+.r-agency.r-long {
+  font-size: 20px;
+}
+.r-agency.r-xlong {
+  font-size: 16px;
+}
+.r-sub {
+  color: #4a5275;
+  margin: 0;
+  font-size: 16px;
+}
+.r-prepared {
+  margin: 40px 0 0;
+  font-weight: 700;
+}
+.r-sample-note {
+  padding: 12px 14px;
+  border: 2px solid #c9d1ff;
+  border-radius: 14px;
+  background: #eef1ff;
+  font-weight: 600;
+}
+.r-section {
+  padding: 36px 56px;
+  border-top: 2px solid #eef1ff;
+  break-inside: auto;
+}
+.r-section h2 {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--brand-ink);
+  margin-bottom: 14px;
+  break-after: avoid;
+}
+.r-section h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.r-section p {
+  margin: 0 0 10px;
+}
+.r-headline {
+  font: 700 20px/1.35 var(--font-display, sans-serif);
+}
+.r-big {
+  font: 900 44px/1 var(--font-display, sans-serif);
+  color: var(--brand-ink);
+}
+.r-estimate {
+  background: #eef1ff;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+.r-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.r-table th,
+.r-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #c9d1ff;
+  vertical-align: top;
+}
+.r-table th {
+  font: 600 13px/1.2 var(--font-body, sans-serif);
+  color: #4a5275;
+}
+.r-num {
+  white-space: nowrap;
+  font-weight: 700;
+  text-align: right;
+}
+/* position:relative keeps the absolutely positioned .r-sr labels inside the scroll clip (N1: page panned 235px at 375) */
+.r-grid-wrap {
+  position: relative;
+  overflow-x: auto;
+}
+.r-grid {
+  table-layout: fixed;
+  font-size: 12px;
+}
+.r-grid th:first-child,
+.r-grid td:first-child {
+  width: 26%;
+  font-weight: 600;
+}
+.r-grid th,
+.r-grid td {
+  padding: 6px 4px;
+}
+/* Answer pills match the app: 12px, Not mentioned is text with a hollow ring */
+.r-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font: 700 12px/1.2 var(--font-body, sans-serif);
+  white-space: nowrap;
+  background: #eef1ff;
+  color: #4a5275;
+}
+/* Grid pills never wrap. On screen, Not mentioned is the ring alone (label kept for screen readers, legend under the table);
+   print keeps the text label. Only the rare long states (Not connected, No result) may wrap. */
+.r-grid .r-pill {
+  padding: 4px 7px;
+  white-space: nowrap;
+}
+.r-grid .r-not-connected,
+.r-grid .r-no-result {
+  white-space: normal;
+}
+.r-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.r-grid .r-ring-only {
+  padding: 6px;
+}
+.r-grid .r-ring-only::before,
+.r-legend .r-ring-only::before {
+  width: 10px;
+  height: 10px;
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+.r-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #4a5275;
+}
+.r-legend .r-ring-only {
+  padding: 0;
+}
+.r-cited {
+  background: var(--brand-fill);
+  color: var(--brand-on);
+}
+.r-mentioned {
+  background: #dcfce7;
+  color: var(--green-ink, #166534);
+}
+.r-failed {
+  background: #fff4cc;
+  color: #0a0f33;
+}
+.r-not-mentioned {
+  background: none;
+  color: #4a5275;
+  font-weight: 500;
+  padding-inline: 2px;
+}
+.r-not-mentioned::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+.r-not-connected,
+.r-no-result {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 2px #c9d1ff;
+}
+.r-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+/* B2: title and date never touch: they share a row with a 12px gap, and the date wraps under the title on phones. */
+.r-list li {
+  display: list-item;
+}
+.r-list li > span:first-child {
+  display: inline-block;
+  min-width: 60%;
+  margin-right: 12px;
+}
+.r-list li > .r-num {
+  display: inline-block;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .r-list li > span:first-child {
+    display: block;
+    min-width: 0;
+    margin-right: 0;
+  }
+  .r-list li > .r-num {
+    display: block;
+    color: #4a5275;
+    font-size: 14px;
+  }
+}
+.r-muted {
+  color: #4a5275;
+}
+/* U05: the fixes' shared caution, said once above the list in the client's words. */
+.r-read-note {
+  margin: 0 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #eef1ff;
+  break-inside: avoid;
+  break-after: avoid;
+}
+.r-read-note h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+.r-read-note p {
+  margin: 0;
+  color: #1c2250;
+  max-width: 72ch;
+}
+.r-fix {
+  padding: 14px 0 18px;
+  border-bottom: 1px solid #c9d1ff;
+  break-inside: avoid;
+}
+.r-fix:last-child {
+  border-bottom: 0;
+}
+.r-fix-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  color: #4a5275;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.r-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font: 600 12px/1 var(--font-body, sans-serif);
+  white-space: nowrap;
+}
+.r-impact {
+  background: #ffffff;
+  color: #0a0f33;
+  box-shadow: inset 0 0 0 2px #c9d1ff;
+}
+.r-ev-strong {
+  background: #dcfce7;
+  color: #166534;
+}
+.r-ev-medium {
+  background: #fff4cc;
+  color: #7a5200;
+}
+.r-ev-weak {
+  background: #eef1ff;
+  color: #4a5275;
+}
+.r-signal {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10px;
+}
+.r-signal i {
+  width: 3px;
+  height: 4px;
+  border-radius: 1px;
+  background: #c9d1ff;
+}
+.r-signal i:nth-child(2) {
+  height: 7px;
+}
+.r-signal i:nth-child(3) {
+  height: 10px;
+}
+.r-signal-1 i:first-child,
+.r-signal-2 i:nth-child(-n + 2),
+.r-signal-3 i {
+  background: var(--brand-graphic);
+}
+.r-done {
+  color: var(--green-ink, #166534);
+}
+.r-fix pre,
+.r-answer pre {
+  background: #f6f7ff;
+  border: 1px solid #c9d1ff;
+  border-radius: 10px;
+  padding: 12px;
+  font: 400 12px/1.5 var(--font-mono, monospace);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 8px 0 10px;
+}
+.r-defs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 10px;
+}
+.r-defs p {
+  font-size: 13px;
+}
+.r-answer {
+  break-inside: avoid;
+  margin-bottom: 14px;
+}
+.r-answer-head {
+  font-size: 13px;
+}
+.r-sources {
+  font-size: 12px;
+  color: #4a5275;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.r-sources a {
+  color: inherit;
+}
+.r-contact {
+  font-size: 16px;
+}
+.r-chart {
+  width: 100%;
+  height: auto;
+}
+.r-line {
+  fill: none;
+  stroke: var(--brand-graphic);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.r-dot {
+  fill: #ffffff;
+  stroke: var(--brand-graphic);
+  stroke-width: 3;
+}
+.r-val {
+  font: 700 12px var(--font-body, sans-serif);
+  fill: #0a0f33;
+}
+.r-axis {
+  font: 600 12px var(--font-body, sans-serif);
+  fill: #4a5275;
+}
+/* Progress proof hero: before -> after in big brand numerals, the observed delta, one caveat line. */
+.r-proof {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 18px;
+}
+.r-proof-nums {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 18px;
+}
+.r-proof-col {
+  display: grid;
+  gap: 4px;
+}
+.r-proof-n {
+  font: 900 64px/1 var(--font-display, sans-serif);
+  letter-spacing: -0.03em;
+  color: var(--brand-ink);
+  font-variant-numeric: tabular-nums;
+}
+.r-proof-before .r-proof-n {
+  color: #4a5275;
+}
+.r-proof-label {
+  font: 600 12px/1.2 var(--font-body, sans-serif);
+  color: #4a5275;
+}
+.r-proof-arrow {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 26px;
+  fill: none;
+  stroke: #4a5275;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.r-proof-of {
+  font: 700 18px/1.2 var(--font-display, sans-serif);
+  color: #0a0f33;
+  margin-bottom: 30px;
+}
+.r-proof-pill {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef1ff;
+  color: #0a0f33;
+  font: 800 14px/1.2 var(--font-display, sans-serif);
+  margin: 0;
+}
+.r-proof-chart {
+  margin-top: 8px;
+}
+/* U4: round y ticks and a quiet grid; the 2-scan note sits under the chart. */
+.r-grid-line {
+  stroke: #eef1ff;
+  stroke-width: 1;
+}
+.r-chart-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #4a5275;
+}
+/* U8 "At a glance" band under the cover: numerals, the observed pill, one bar per engine. Static and print-safe. */
+.r-glance {
+  display: grid;
+  gap: 18px;
+  padding: 36px 56px;
+  border-top: 2px solid #eef1ff;
+  break-inside: avoid;
+}
+.r-glance-title {
+  margin: 0;
+  font: 800 13px/1 var(--font-display, sans-serif);
+  letter-spacing: 0.01em;
+  color: var(--brand-ink);
+}
+.r-glance .r-proof {
+  margin: 0;
+}
+.r-glance .r-proof-n {
+  font-size: 56px;
+  display: inline-block;
+}
+.r-glance .r-proof-pill {
+  font-variant-numeric: tabular-nums;
+}
+/* U16: fix report headline. The numeral and its words sit on one baseline; the collection date goes underneath. */
+.r-glance-stat {
+  display: grid;
+  gap: 6px;
+}
+/* Inline flow, not flex: the baseline holds, and a long client name wraps under the words instead of under the numeral. */
+.r-glance-line {
+  margin: 0;
+}
+.r-glance-line .r-proof-n {
+  margin-right: 6px;
+}
+.r-glance-line .r-proof-of {
+  margin: 0;
+}
+.r-glance-stat .r-proof-label {
+  margin: 0;
+}
+.r-mini-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.r-mini-bars li {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 112px;
+  align-items: center;
+  gap: 12px;
+}
+.r-mini-name {
+  font: 600 13px/1.2 var(--font-body, sans-serif);
+  color: #0a0f33;
+}
+.r-mini-num {
+  font: 700 13px/1.2 var(--font-body, sans-serif);
+  color: #0a0f33;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.r-mini-track {
+  display: grid;
+  gap: 3px;
+}
+.r-mini {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: #eef1ff;
+  overflow: hidden;
+}
+.r-mini > span {
+  display: block;
+  height: 100%;
+  background: var(--brand-graphic);
+  transform-origin: left center;
+}
+.r-mini-pairs .r-mini {
+  height: 6px;
+}
+.r-mini-before {
+  background: transparent;
+}
+.r-mini-before > span {
+  background: #c9d1ff;
+}
+.r-mini-off .r-mini-name,
+.r-mini-off .r-mini-num {
+  color: #4a5275;
+  font-weight: 600;
+}
+.page-foot {
+  display: none;
+}
+@media screen and (max-width: 700px) {
+  /* Phones: the toolbar scrolls away with the page instead of covering 15% of it. */
+  .toolbar {
+    position: static;
+    flex-wrap: wrap;
+    gap: 0 12px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  .toolbar .print-hint {
+    display: none;
+  }
+  .tb-back {
+    flex-basis: 100%;
+    margin-right: 0;
+  }
+  .tb-btn {
+    margin-left: auto;
+  }
+  .r-proof-n {
+    font-size: 52px;
+  }
+  .r-proof-arrow {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 20px;
+  }
+  .r-proof-of {
+    flex-basis: 100%;
+    margin: 0;
+  }
+  .r-section,
+  .r-glance {
+    padding: 28px 20px;
+  }
+  .r-glance .r-proof-n {
+    font-size: 48px;
+  }
+  .r-mini-bars li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 4px;
+  }
+  .r-mini-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .r-cover {
+    min-height: 0;
+  }
+  .r-cover-body {
+    padding: 40px 24px;
+  }
+  .r-cover h1 {
+    font-size: 38px;
+    overflow-wrap: anywhere;
+  }
+  .r-logo,
+  .r-agency {
+    margin-bottom: 24px;
+  }
+  .r-defs {
+    grid-template-columns: 1fr;
+  }
+}
+@media screen and (max-width: 700px) {
+  .r-grid {
+    min-width: 680px;
+  }
+}
+@page {
+  size: A4;
+  margin: 14mm 12mm 18mm;
+}
+@media print {
+  body.report-body {
+    background: #ffffff;
+  }
+  .toolbar {
+    display: none;
+  }
+  .r-error {
+    box-shadow: none;
+    border-color: #4a5275;
+  }
+  .r-error .tb-btn {
+    display: none;
+  }
+  .r-grid .r-ring-only {
+    padding: 4px 2px;
+  }
+  .r-grid .r-ring-only::before {
+    width: 6px;
+    height: 6px;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+  .r-grid .r-ring-only .r-sr {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+  .r-legend {
+    display: none;
+  }
+  .report {
+    margin: 0;
+    max-width: none;
+    border-radius: 0;
+  }
+  .r-cover {
+    min-height: 250mm;
+  }
+  .r-section,
+  .r-glance {
+    padding: 18px 4px;
+  }
+  /* A fixed negative-offset footer was printed over the first content lines.
+     Agency identity already appears on the cover and contact section. */
+  .page-foot {
+    display: block;
+    margin-top: 12px;
+    text-align: center;
+    font-size: 10px;
+    color: #4a5275;
+  }
+  .r-list,
+  .r-section:has(.r-contact),
+  .r-section:has(> h2 + p:last-child),
+  .r-section:has(> h2 + .r-list:last-child),
+  .r-table tr {
+    break-inside: avoid;
+  }
+  .r-table thead {
+    display: table-header-group;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+/* R11: the only report motion (back-arrow nudge) stops under either reduced-motion switch. */
+@media (prefers-reduced-motion: reduce) {
+  .tb-back svg,
+  .r-error .tb-btn {
+    transition: none;
+  }
+}
+html[data-motion='reduce'] :is(.tb-back svg, .r-error .tb-btn) {
+  transition: none;
+}
