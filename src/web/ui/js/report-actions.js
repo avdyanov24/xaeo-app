@@ -9,7 +9,7 @@ const say = (text) => {
   if (status) status.textContent = text;
 };
 const params = new URLSearchParams(location.hash.slice(1));
-const ID = /^[\w-]{36}$/;
+const ID = /^\d+$/;
 // What report.js loaded: a saved report (report=<id>) or a live preview (client=<id>&type=...), saved on first print.
 let reportId = ID.test(params.get('report') || '') ? params.get('report') : null;
 let loaded = null;
@@ -176,6 +176,9 @@ function confirmReview(action) {
 
 // A live preview becomes a saved report on its first confirmed print; later prints reuse it. The server checks the
 // review flag and that the reviewed scan is still the latest one.
+// The Reports tab listens on this channel, so its Exported list updates without a reload.
+const exportsChannel =
+  'BroadcastChannel' in window ? new BroadcastChannel('agency-report-exports') : null;
 async function savedId() {
   if (reportId) return reportId;
   if (!loaded?.clientId || !loaded.scanId)
@@ -206,6 +209,7 @@ async function savedId() {
   reportId = body.id;
   // Same address as a saved report, so a reload shows this copy. replaceState fires no hashchange (no reload).
   history.replaceState(history.state, '', `/report#${new URLSearchParams({ report: reportId })}`);
+  exportsChannel?.postMessage({ clientId: Number(loaded.clientId), reportId });
   return reportId;
 }
 

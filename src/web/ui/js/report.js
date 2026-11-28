@@ -899,7 +899,7 @@ async function load() {
   const reportId = params.get('report'),
     clientId = params.get('client');
   const id = reportId || clientId;
-  if (!/^[\w-]{36}$/.test(id || '')) {
+  if (!/^\d+$/.test(id || '')) {
     fail({
       icon: 'link',
       title: 'This report link is incomplete',
@@ -944,7 +944,7 @@ async function load() {
   }
   // Back goes to this client's Reports tab (where the report was exported), not the client list.
   const backId = data.source?.clientId || clientId;
-  if (/^[\w-]{36}$/.test(backId || '')) {
+  if (/^\d+$/.test(backId || '')) {
     document.querySelector('[data-back]')?.setAttribute('href', `/app#/clients/${backId}/reports`);
     const label = document.querySelector('[data-back-label]');
     if (label)
@@ -974,7 +974,7 @@ async function load() {
     new CustomEvent('report:loaded', {
       detail: {
         reportId: reportId || null,
-        clientId: /^[\w-]{36}$/.test(backId || '') ? backId : null,
+        clientId: /^\d+$/.test(backId || '') ? backId : null,
         type,
         scanId: data.source?.scanId || null,
         opts: { ...opts },

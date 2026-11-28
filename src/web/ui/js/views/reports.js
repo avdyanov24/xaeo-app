@@ -1,10 +1,10 @@
 // Reports: white-label fix and progress reports. Opening one is a free preview in a new tab; the review attestation
-// sits on every path that sends it (Download PDF, print), in report-actions.js (U06).
+// sits on every path that sends it (the print button), in report-actions.js (U06).
 import { h, clear, icon, date, emptyState, button, link, friendlyError, api } from '../lib.js';
 import { brandTokens } from '../brand-color.js';
 import { state } from '../main.js';
 
-// The report tab tells this one when a report is saved (on its first download or print), so Exported stays
+// The report tab tells this one when a report is saved (on its first print), so Exported stays
 // current without a reload. The channel name is shared with report-actions.js.
 let exportsChannel = null;
 
@@ -134,7 +134,7 @@ export async function renderReports(el, ctx) {
         h('h2', 'Reports'),
         h(
           'p.muted',
-          `White‑label: ${w.name}’s logo and colors, no Xaeo marks anywhere. A report opens as a preview in a new tab. You confirm your review there when you download or print it.`,
+          `White‑label: ${w.name}’s logo and colors, no Xaeo marks anywhere. A report opens as a preview in a new tab. You confirm your review there when you print or save it as a PDF.`,
         ),
       ),
     ),
@@ -187,7 +187,7 @@ export async function renderReports(el, ctx) {
           )
         : h(
             'p.muted',
-            'Nothing exported yet. A report lands here the first time you download or print it.',
+            'Nothing exported yet. A report lands here the first time you print or save it as a PDF.',
           ),
     ),
   );
