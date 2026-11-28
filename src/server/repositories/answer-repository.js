@@ -121,8 +121,8 @@ export function listAnswers(db, workspaceId, scanId) {
  * @returns {Map<number, AnswerRow[]>} by scan id, each list in the order collected; a scan with no answers is not in the map
  */
 export function listAnswersByScans(db, workspaceId, scanIds) {
-  const bySca = new Map();
-  if (!scanIds.length) return bySca;
+  const byScan = new Map();
+  if (!scanIds.length) return byScan;
   const marks = scanIds.map(() => '?').join(', ');
   const rows = db
     .prepare(
@@ -131,10 +131,10 @@ export function listAnswersByScans(db, workspaceId, scanIds) {
     .all(workspaceId, ...scanIds)
     .map(toAnswer);
   for (const row of rows) {
-    if (!bySca.has(row.scanId)) bySca.set(row.scanId, []);
-    bySca.get(row.scanId).push(row);
+    if (!byScan.has(row.scanId)) byScan.set(row.scanId, []);
+    byScan.get(row.scanId).push(row);
   }
-  return bySca;
+  return byScan;
 }
 
 /**
