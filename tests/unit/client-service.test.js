@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { openDatabase } from '../../src/server/db/database.js';
 import * as workspaces from '../../src/server/repositories/workspace-repository.js';
-import { createClientService, normalizeDomain } from '../../src/server/services/client-service.js';
+import {
+  createClientService,
+  MAX_QUESTIONS,
+  normalizeDomain,
+} from '../../src/server/services/client-service.js';
 
 const T0 = Date.parse('2026-11-28T09:00:00Z');
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -110,6 +114,50 @@ describe('archive and unarchive', () => {
     assert.equal(clients.length, 1);
     assert.equal(clients[0].status, 'active');
     assert.equal(archivedCount, 0);
+  });
+});
+
+describe('questions', () => {
+  it('adds a question and returns the client with the new list', () => {
+    const { id } = service.create(ws, details());
+    const client = service.addQuestion(ws, id, { text: 'Is Northside any good?', intent: 'trust' });
+    assert.deepEqual(
+      client.questions.map((q) => q.text),
+      ['Who is the best plumber in Leeds?', 'Is Northside any good?'],
+    );
+    assert.equal(client.questions[1].active, true);
+  });
+
+  it(`stops at ${MAX_QUESTIONS} questions with a 409`, () => {
+    const starters = Array.from({ length: MAX_QUESTIONS }, (_, i) => ({
+      text: `Question ${i + 1}?`,
+      intent: 'find',
+    }));
+    const { id } = service.create(ws, details({ questions: starters }));
+    assert.throws(() => service.addQuestion(ws, id, { text: 'One too many?', intent: 'find' }), {
+      status: 409,
+    });
+    assert.equal(service.get(ws, id).questions.length, MAX_QUESTIONS);
+  });
+
+  it('edits and deletes a question by id and answers 404 for one that is not there', () => {
+    const { id } = service.create(ws, details());
+    const [{ id: questionId }] = service.get(ws, id).questions;
+    const edited = service.updateQuestion(ws, questionId, { active: false });
+    assert.equal(edited.questions[0].active, false);
+    assert.deepEqual(service.deleteQuestion(ws, questionId).questions, []);
+    assert.throws(() => service.updateQuestion(ws, questionId, { active: true }), { status: 404 });
+    assert.throws(() => service.deleteQuestion(ws, questionId), { status: 404 });
+  });
+
+  it('does not let another workspace edit a question', () => {
+    const { id } = service.create(ws, details());
+    const [{ id: questionId }] = service.get(ws, id).questions;
+    const other = workspaces.insertWorkspace(db, 'Another Agency');
+    assert.throws(() => service.updateQuestion(other, questionId, { active: false }), {
+      status: 404,
+    });
+    assert.equal(service.get(ws, id).questions[0].active, true);
   });
 });
 
