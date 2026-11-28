@@ -4,7 +4,10 @@ import * as workspaces from '../repositories/workspace-repository.js';
 /** Rows grouped under the id they belong to, in the order they were read. */
 function groupBy(list, key) {
   const groups = new Map();
-  for (const item of list) groups.set(item[key], [...(groups.get(item[key]) ?? []), item]);
+  for (const item of list) {
+    if (!groups.has(item[key])) groups.set(item[key], []);
+    groups.get(item[key]).push(item);
+  }
   return groups;
 }
 
