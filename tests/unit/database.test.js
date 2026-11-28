@@ -10,7 +10,7 @@ const tableNames = (db) =>
     .map((row) => row.name);
 
 describe('database', () => {
-  it('applies the identity, client, Xo and fix migrations on open', () => {
+  it('applies the identity, client, Xo, fix and report migrations on open', () => {
     const db = openDatabase(':memory:');
     assert.deepEqual(tableNames(db), [
       'answers',
@@ -18,8 +18,10 @@ describe('database', () => {
       'fix_evidence',
       'fix_handoffs',
       'fixes',
+      'invitations',
       'memberships',
       'questions',
+      'reports',
       'scans',
       'schema_migrations',
       'sessions',
